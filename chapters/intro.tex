@@ -3,26 +3,44 @@
 \chapter{Introduction}
 \label{ch:intro}
 
-Page budget for Introduction: 3-5 pages.
+The University of Stavanger has for the last couple of years been developing a project known as QuickFeed.
+Originally developed in 2015, the project has since then been through numerous changes. % (ref)
+QuickFeed has since its inception been used by several computer science classes at the university.
 
+QuickFeed aims to ease the process of managing student assignments, and does so for both students and the teaching staff.
+Though not exclusively, the project is primarily developed with the intent of handling code based assignments.
+QuickFeed will run predetermined tests on submitted code, and instantly provide feedback back to students through its web interface.
+Using QuickFeed, assignments can be both scored and graded without the teaching staff ever having to intervene.
+
+To accommodate these features, QuickFeed uses GitHub to, amongst other things, manage student code.
+GitHub is therefore the primary site students interact with, when working with QuickFeed managed assignments.
+Because of this, there has been a desire to further integrate QuickFeed with GitHub.
+Specifically, with the issues, pull request and workflow features the service provides.
 
 \section{Background and Motivation}
 \label{sec:motivation}
 
-\begin{itemize}
-\item Awaken the reader's interest and convince her why the theme is important.
-\item Background information might be historical in nature, or it might refer to previous research or practical considerations.
-\item It should be written on a level that it's understandable by anyone with a computer science bachelor's degree.
-\end{itemize}
+The motivation for this project is to have GitHub issues, pull requests and workflows used when students are working on assignments.
+Given that QuickFeed already heavily uses GitHub, it seems logical and advantageous to use more of its features than we currently do.
 
+More specifically, there is a desire to use GitHub pull requests as a hub for students when working.
+If integrated with QuickFeed, pull requests can further expand on student feedback through the use of GitHub workflows.
+Feedback can also be provided within a pull request through code review, either by other co-students or by the teaching staff.
+
+This project is a continuation of the work done by Adil Khurshid. % (ref)
+The motivation behind Adil's work, is the same as for this thesis.
 
 \section{Objectives}
 
-\begin{itemize}
-\item Define the goals of your study. 
-\item It might be presented as a bullet list.
-\end{itemize}
+The objectives of the project are described as follows:
 
+\begin{itemize}
+    \item Teachers should be able to separate individual assignments into smaller tasks.
+    \item QuickFeed should create an issue for each task on student repositories.
+    \item Students should be able to create pull requests based on the tasks of a given assignment.
+    \item QuickFeed should assign reviewers to these pull requests, and should support assigning both students and teachers.
+    \item QuickFeed should use GitHub workflows to display test results from student code.
+\end{itemize}
 
 \section{Approach and Contributions}
 
