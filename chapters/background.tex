@@ -7,7 +7,7 @@ In this chapter we describe existing technology that will be referred to through
 
 \section{GitHub}
 
-In this section we explore the pull request and issue features of GitHub.
+In this section we explore features of GitHub that are relevant to this thesis.
 
 \subsection{Issues}
 
@@ -23,7 +23,7 @@ GitHub issues can therefore function as a discussion hub, and makes it especiall
     \label{fig:github-issue}
 \end{figure}
 
-\subsection{Pull requests}
+\subsection{Pull Requests}
 
 Pull requests are a desire to merge any feature branch, into the main branch of a repository.
 GitHub supports managing pull requests through its user interface, and allows any contributor to a repository to create a pull request.
@@ -56,6 +56,10 @@ Maybe maybe
 
 In this section we describe the features of QuickFeed that are important to this project.
 
+\subsection{Current Workflow}
+
+Explain the current workflow, such that it is apparent how it differs from the new one.
+
 \subsection{Protobuf}
 
 Maybe maybe
@@ -64,11 +68,7 @@ Maybe maybe
 
 Maybe maybe
 
-\subsection{Running tests on student code}
-
-Maybe maybe
-
-\subsection{QuickFeed repository structure}
+\subsection{QuickFeed Repository Structure}
 
 When a teacher creates a course in QuickFeed, a GitHub organization is created to represent it.
 Within this organization, three initial repositories are created, as well as student repositories when students enroll.
@@ -92,7 +92,6 @@ Additionally, \textit{tests} may contain \textit{run.sh} script files, usually i
 The \textit{scripts} folder can also contain a Dockerfile, used to create a test environment.
 The test code, script files and Dockerfile each contribute to how tests are run on student code.
 Even though QuickFeed supports running automatic tests on student code, it is not required.
-Assignments can simply contain no tests, leaving the assignments to have to be manually graded.
 It is also worth noting that students never have access to this repository.
 
 
