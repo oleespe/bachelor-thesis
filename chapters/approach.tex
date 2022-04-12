@@ -8,8 +8,8 @@ Text text
 \section{Existing Approach}
 
 The existing approach to this project is detailed in the report written by Adil.
-In short, his approach is summarized as follows.
 
+In short, his approach is summarized as follows.
 When a teacher creates an assignment, they have the option of creating any number of task markdown files.
 For each of these markdown files, a single issue should be created on every student repository.
 The title and body of these issues are defined by the contents of the corresponding task.
@@ -18,7 +18,7 @@ After the deadline of the assignment has passed, QuickFeed randomly assigns co-s
 Only when the pull request has been approved by a teacher, should it be merged.
 
 Adil discusses several challenges to this approach, and gives his proposed solutions.
-Given that he did not finish his work however, many of these solutions have later proved inadequate or faulty.
+Given that he did not finish his work however, many of these solutions have later proved inadequate or faulty, and in some cases, far too complex.
 In general, this thesis is independent of the aforementioned approach, and uses it primarily as a source of inspiration.
 
 \section{Desired workflow}
@@ -93,11 +93,28 @@ For one, if an assignment contains for example 6 tasks, it would mean that 6 cop
 Let us say that there are 50 students taking a course, this would then mean that 300 repositories in total are created.
 Obviously this is not a feasible way to tackle this issue, and instead any such implementation should only create one copy-repository per student.
 
-Even if we ignore this single issue, there is still the problem of how to manage the individual copy-repositories.
-How do we ensure that things stay consistent?
-How would we handle students?
+Even if we ignore this single issue, there is still the problem of how to manage and create the individual copy-repositories.
+This solution therefore seems too intricate to be easily implemented.
+And in general, it seems to create more problems than it solves.
 
 \subsection{Assigning reviewers}
+
+One of the primary reasons for using pull requests is to use its code review features.
+How to decide who these reviewers should be, and when to assign them is somewhat challenging.
+
+One important factor we have to take into consideration, is that no student should be assigned to review a task they themselves have not yet completed.
+Otherwise we get a similar situation to the one mentioned previously, where students have the option of plagiarising other students code.
+Any implementation would have to make sure that any student reviewing code, should only review code they are already finished with.
+A natural approach to this would be to have students only review code when the assignment deadline is finished.
+At this point all students have gotten either a passing or failing grade.
+QuickFeed can now safely assign reviewers amongst the passing students.
+
+This approach would lead to increased complexity, as we would need to expand upon how QuickFeed handles grading assignments.
+Currently, assignments are graded either manually or automatically, and a grade is always set before its deadline.
+If we wish to further expand the 
+If we then assign reviewers amongst passing students after the deadline has passed, they will have no natural incentive 
+
+Assuming we have solved this first problem, there is still the question of deciding 
 
 \subsection{Student feedback}
 
