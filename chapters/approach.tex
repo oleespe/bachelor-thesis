@@ -30,15 +30,12 @@ They are created by the teacher as markdown files within an assignment, and Quic
 When a student wants to complete any task, they create a new branch on their local repository.
 Using this branch, they create a pull request on their student repository that is linked to the associated issue.
 
-Upon pull request creation, QuickFeed assigns reviewers to the pull request.
-At least one teacher is assigned to the pull request as well as a desired number of students.
-
-At this stage, a student has an open pull request on their repository with reviewers assigned.
-Tests are run on the student code by QuickFeed, and their results are displayed via GitHub workflows.
-This way, students receive feedback on their work directly through GitHub.
+At this stage, a student has an open pull request on their repository.
+Tests are run on the student code by QuickFeed, and students receive feedback on these tests via GitHub workflows.
 
 When students are finished with a task, i.e., they receive a passing score from the test results, their code is ready to be reviewed.
-Any assigned reviewers can at this point request changes to the source code.
+At this point, QuickFeed should automatically assign reviewers that can request changes to the source code.
+One of these reviewers should always be a teacher.
 When all changes are implemented, the teacher approves the pull request, allowing the student to merge it.
 
 When all tasks have gone through this process, the assignment itself can be set as approved.
@@ -54,16 +51,11 @@ In this section we discuss these challenges, as well as how to possibly overcome
 Introducing pull requests to students can prove challenging in itself.
 Even though pull requests are not exactly a challenging feature to learn and use, it can still prove time consuming for certain students.
 Even more so, if the students are already struggling with how to use git.
-More time and effort from the teaching staff might have to be dedicated to assisting students with issues they may have.
+Having to swap between branches, making commits to them, and also knowing how to manage and create pull requests, are all things students will have to familiar with.
+More time and effort from the teaching staff may therefore have to be dedicated to assisting students with issues they may have.
 
-This is not an issue that can simply be solved.
+This is not an issue that can be explicitly solved.
 Every teacher will have to decide themselves if the benefits outweigh the increased complexity when using tasks and pull request with their assignments.
-
-\subsection{Multiple branches}
-
-Another issue arises from the fact that students will now be working in branches other than the main one.
-In the current version of QuickFeed tests are only run on the main branch of any repository.
-To support pull requests, QuickFeed will have to be expanded to support running tests on any branch.
 
 \subsection{Access to Student Repositories}
 
@@ -88,7 +80,7 @@ One possible solution is to create a clone repository containing only the assign
 This way, any reviewing student will only have access to the assignment in question, and not the rest of that students repository.
 This solution would therefore avoid the problem described in the above scenario.
 
-A functional implementation of the above solution seems highly complex, as there are a myriad of complications that would have to be accounted for.
+A functional implementation of the above solution seems highly complex, as there is a myriad of complications that would have to be accounted for.
 For one, if an assignment contains for example 6 tasks, it would mean that 6 copy-repositories would have to be created and managed by QuickFeed for each student.
 Let us say that there are 50 students taking a course, this would then mean that 300 repositories in total are created.
 Obviously this is not a feasible way to tackle this issue, and instead any such implementation should only create one copy-repository per student.
@@ -102,23 +94,40 @@ And in general, it seems to create more problems than it solves.
 One of the primary reasons for using pull requests is to use its code review features.
 How to decide who these reviewers should be, and when to assign them is somewhat challenging.
 
-One important factor we have to take into consideration, is that no student should be assigned to review a task they themselves have not yet completed.
+An important factor we have to take into consideration, is that no student should be assigned to review a task they themselves have not yet completed.
 Otherwise we get a similar situation to the one mentioned previously, where students have the option of plagiarising other students code.
 Any implementation would have to make sure that any student reviewing code, should only review code they are already finished with.
 A natural approach to this would be to have students only review code when the assignment deadline is finished.
-At this point all students have gotten either a passing or failing grade.
-QuickFeed can now safely assign reviewers amongst the passing students.
+At this point all students have gotten either a passing or failing grade, and QuickFeed can safely assign reviewers amongst the passing students.
 
 This approach would lead to increased complexity, as we would need to expand upon how QuickFeed handles grading assignments.
 Currently, assignments are graded either manually or automatically, and a grade is always set before its deadline.
-If we wish to further expand the 
-If we then assign reviewers amongst passing students after the deadline has passed, they will have no natural incentive 
-
-Assuming we have solved this first problem, there is still the question of deciding 
+Continuing with the approach that a pull request itself needs to be approved, for the assignment as a whole to be approved.
+Then, grading an assignment would have to happen at a different stage than it currently does, if reviewers are assigned after the deadline.
 
 \subsection{Student feedback}
 
-\subsection{Malicious Student Behavior}
+Another important feature is to have students receive feedback, within a pull request, on the code they create via GitHub workflows.
+It was envisioned that this feedback should come in the form of a score or grade, determined by tests run on the student's code.
+Just as students currently receive feedback on an assignment as a whole, we want QuickFeed to accommodate the same for tasks.
+To accomplish this, QuickFeed will need the ability to run tests solely based on tasks.
+
+Currently, QuickFeed is only built around running tests on an assignment as a whole.
+If we were to expand QuickFeed, and give it the ability to run tests on smaller parts of an assignment, a massive rewrite of some of its fundamental architecture would be required.
+As an example, QuickFeed currently only supports running tests on the main branch of any repository.
+To support pull requests, it needs to also support other branches.
+
+As a whole, this is a massive problem to tackle, and is riddled with potential complications and further issues.
+Any potential implementation solving this will have to be rigorously planned. 
+
+\subsection{Human Error}
+
+Finally, we have to take into consideration the possibility that students may do things that we simply have not accounted for.
+For example, they might delete issues that QuickFeed creates.
+QuickFeed would then need to somehow recreate that issue.
+
+We will also have to account for students closing and possibly merging pull requests that are not yet approved by a teacher.
+If this happens, QuickFeed must have the capacity to restore a working state for the task/assignment.
 
 \section{Analysis}
 
