@@ -34,13 +34,13 @@ At this stage, a student has an open pull request on their repository.
 Tests are run on the student code by QuickFeed, and students receive feedback on these tests via GitHub workflows.
 
 When students are finished with a task, i.e., they receive a passing score from the test results, their code is ready to be reviewed.
-At this point, QuickFeed should automatically assign reviewers that can request changes to the source code.
+At this point, QuickFeed should automatically assign reviewers who should request any changes they deem fitting.
 One of these reviewers should always be a teacher.
 When all changes are implemented, the teacher approves the pull request, allowing the student to merge it.
 
-When all tasks have gone through this process, the assignment itself can be set as approved.
+Finally, when all tasks have gone through this process, the assignment itself can be set as approved.
 
-\section{Challenges and Possible Solutions}
+\section{Challenges}
 
 In the previous section we looked at what exactly it is we are trying to accomplish. 
 A number of challenges become apparent when trying to implement these new features however.
@@ -50,7 +50,7 @@ In this section we discuss these challenges, as well as how to possibly overcome
 
 Introducing pull requests to students can prove challenging in itself.
 Even though pull requests are not exactly a challenging feature to learn and use, it can still prove time consuming for certain students.
-Even more so, if the students are already struggling with how to use git.
+Even more so if students are already struggling with how to use git.
 Having to swap between branches, making commits to them, and also knowing how to manage and create pull requests, are all things students will have to familiar with.
 More time and effort from the teaching staff may therefore have to be dedicated to assisting students with issues they may have.
 
@@ -59,80 +59,92 @@ Every teacher will have to decide themselves if the benefits outweigh the increa
 
 \subsection{Access to Student Repositories}
 
-A major problem is how to handle access, when dealing with student to student code review.
-In order for any student to review the code of another, they would have to somehow be given access to said code.
+In order for any student to review the source code of another's, they will have to somehow be given access to said code.
 
 A solution could be to use GitHub teams to grant students review access to other repositories.
-This access can then be removed once the review process is finished, or when the assignment deadline is passed.
+Access can then be removed once the review process is finished.
 This solution does however lead to possible complications.
 First of all, students having access to another random student's repository can be somewhat invasive.
 Secondly it can lead to the following possible scenario:
 
 Imagine we have two students: Student-1 and Student-2.
 Student-2 feels they are finished with a task from assignment1, and therefore requests a review.
-Student-1 is assigned to review it, and is therefore granted access, by QuickFeed, to Student-2's repository.
+Student-1 is assigned to review it, and is granted access by QuickFeed to Student-2's repository.
 Student-2 is also diligent, and has already started working on assignment2.
 In fact, Student-2 has nearly completed assignment2.
 Student-1 however, has not even started on assignment2, but because they can now access Student-2's assignments, they receive valuable knowledge on how to solve it.
+Of course, this would be highly problematic to any teacher wanting their students to solve assignments independently.
+Any implementation will have to avoid this type of scenario.
 
-Of course, this would be highly problematic, and any implementation would have to avoid this type of problem.
-One possible solution is to create a clone repository containing only the assignment or task that is to be reviewed. 
-This way, any reviewing student will only have access to the assignment in question, and not the rest of that students repository.
-This solution would therefore avoid the problem described in the above scenario.
+Another possible solution is to create a clone repository, containing only the task that is to be reviewed. 
+This way, any reviewing student will only have access to the task in question, and not the rest of that students repository.
+This solution will therefore avoid the problem described in the above scenario.
 
-A functional implementation of the above solution seems highly complex, as there is a myriad of complications that would have to be accounted for.
-For one, if an assignment contains for example 6 tasks, it would mean that 6 copy-repositories would have to be created and managed by QuickFeed for each student.
-Let us say that there are 50 students taking a course, this would then mean that 300 repositories in total are created.
-Obviously this is not a feasible way to tackle this issue, and instead any such implementation should only create one copy-repository per student.
+A functional implementation of the above solution seems highly complex, as there is a myriad of complications and problems that will have to be accounted for.
+For one, if an assignment contains for example 6 tasks, it would mean that 6 copy repositories will have to be created and managed by QuickFeed for each student.
+If a course has 50 enrolled students, 300 new repositories will then have to be created, for just that one assignment.
+Obviously this is not a feasible way to tackle this issue.
 
-Even if we ignore this single issue, there is still the problem of how to manage and create the individual copy-repositories.
-This solution therefore seems too intricate to be easily implemented.
-And in general, it seems to create more problems than it solves.
+Even if we manage to reduce the number of such repositories that need to be created, there is still the problem of how to manage them.
+An implementation needs to handle, amongst other things, the following:
+
+\begin{itemize}
+    \item How to create new review repositories containing only the code that is relevant.
+    \item How to delete them when they are no longer needed.
+    \item How to associate actions between a review repository and the original student repository.
+          E.g. if code is updated in the original, should it then be also updated in the other?
+          And if so, how do we accomplish this?
+    \item How to fit pull requests into this approach?
+\end{itemize}
+
+Let us say that we despite these challenges, managed to create a fully functional implementation of the above solution.
+We now have to cope with the prospect that we have further complexified the user experience.
+Students having to learn GitHub pull requests may be problematic enough on its own, but also introducing them to review repositories could prove counter-productive.
 
 \subsection{Assigning reviewers}
 
-One of the primary reasons for using pull requests is to use its code review features.
-How to decide who these reviewers should be, and when to assign them is somewhat challenging.
+One of the primary reasons for using GitHub pull requests is to use its code review features.
+We want both students and teachers to review code, with teachers explicitly having to approve a pull request for the assignment as a whole to be approved.
 
-An important factor we have to take into consideration, is that no student should be assigned to review a task they themselves have not yet completed.
-Otherwise we get a similar situation to the one mentioned previously, where students have the option of plagiarising other students code.
-Any implementation would have to make sure that any student reviewing code, should only review code they are already finished with.
-A natural approach to this would be to have students only review code when the assignment deadline is finished.
-At this point all students have gotten either a passing or failing grade, and QuickFeed can safely assign reviewers amongst the passing students.
+When assigning students we must make sure that no student is assigned to review a task they themselves have not yet completed.
+Otherwise, we get a similar situation to the one mentioned in the previous challenge, where students have the option of plagiarising other students code.
+Any implementation will have to make sure that students reviewing code, should only review code they are themselves already finished with.
+A natural approach to this could be to have students only review code when the assignment deadline is passed.
+At this point all students have gotten either a passing or failing grade, and QuickFeed can safely assign reviewers.
 
-This approach would lead to increased complexity, as we would need to expand upon how QuickFeed handles grading assignments.
-Currently, assignments are graded either manually or automatically, and a grade is always set before its deadline.
-Continuing with the approach that a pull request itself needs to be approved, for the assignment as a whole to be approved.
-Then, grading an assignment would have to happen at a different stage than it currently does, if reviewers are assigned after the deadline.
+% Possible: No incentive for students to actually do code review when there is no penalty to refuse.
 
 \subsection{Student feedback}
 
-Another important feature is to have students receive feedback, within a pull request, on the code they create via GitHub workflows.
-It was envisioned that this feedback should come in the form of a score or grade, determined by tests run on the student's code.
+Another important feature is to have students receive feedback, via GitHub workflows, on the code they create.
+We envision that this feedback should come in the form of a score or grade, determined by tests run on the student's code.
 Just as students currently receive feedback on an assignment as a whole, we want QuickFeed to accommodate the same for tasks.
-To accomplish this, QuickFeed will need the ability to run tests solely based on tasks.
 
-Currently, QuickFeed is only built around running tests on an assignment as a whole.
-If we were to expand QuickFeed, and give it the ability to run tests on smaller parts of an assignment, a massive rewrite of some of its fundamental architecture would be required.
-As an example, QuickFeed currently only supports running tests on the main branch of any repository.
-To support pull requests, it needs to also support other branches.
+Currently, QuickFeed is only built around running tests on an assignment as a whole on the main branch.
+To accommodate pull requests, QuickFeed would first need to be expanded so that it can run tests on other branches.
+Secondly, QuickFeed will need the ability to run tests solely based on tasks.
+The first accommodation is pretty straight forward, but the second one would require a massive rethink of some of QuickFeed's fundamental architecture.
 
-As a whole, this is a massive problem to tackle, and is riddled with potential complications and further issues.
-Any potential implementation solving this will have to be rigorously planned. 
+% How would we make QuickFeed run only the tests that are relevant for a given task
 
 \subsection{Human Error}
 
 Finally, we have to take into consideration the possibility that students may do things that we simply have not accounted for.
 For example, they might delete issues that QuickFeed creates.
-QuickFeed would then need to somehow recreate that issue.
+QuickFeed will then need to somehow recreate that issue.
 
 We will also have to account for students closing and possibly merging pull requests that are not yet approved by a teacher.
 If this happens, QuickFeed must have the capacity to restore a working state for the task/assignment.
 
 \section{Analysis}
 
-Analyse the challenges from previous chapter, and how we can overcome them.
-What compromises have to be made?
+So far in this chapter we have discussed the challenges associated with trying to implement our desired features.
+This section analyses our existing approach in light of these challenges.
+
+By far the most challenging issue we have discussed so far, is how to have students access another student's code.
+Any solution seems vulnerable, as they leave the door open for possible problems and complications.
+To account for this vulnerability, any implementation seems highly time consuming and possibly complex.
+Through 
 
 \section{New Approach}
 
