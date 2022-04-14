@@ -37,8 +37,9 @@ When students are finished with a task, i.e., they receive a passing score from 
 At this point, QuickFeed should automatically assign reviewers who should request any changes they deem fitting.
 One of these reviewers should always be a teacher.
 When all changes are implemented, the teacher approves the pull request, allowing the student to merge it.
-
 Finally, when all tasks have gone through this process, the assignment itself can be set as approved.
+
+We generally approach this project with a desire to make QuickFeed support this workflow.
 
 \section{Challenges}
 
@@ -59,7 +60,7 @@ Every teacher will have to decide themselves if the benefits outweigh the increa
 
 \subsection{Access to Student Repositories}
 
-In order for any student to review the source code of another's, they will have to somehow be given access to said code.
+In order for one student to review the source code of another, they will have to somehow be given access to that code.
 
 A solution could be to use GitHub teams to grant students review access to other repositories.
 Access can then be removed once the review process is finished.
@@ -92,12 +93,12 @@ An implementation needs to handle, amongst other things, the following:
     \item How to create new review repositories containing only the code that is relevant.
     \item How to delete them when they are no longer needed.
     \item How to associate actions between a review repository and the original student repository.
-          E.g. if code is updated in the original, should it then be also updated in the other?
+          E.g. if code is updated in the original, should it then also be updated in the other?
           And if so, how do we accomplish this?
     \item How to fit pull requests into this approach?
 \end{itemize}
 
-Let us say that we despite these challenges, managed to create a fully functional implementation of the above solution.
+Let us say that we, despite these challenges, managed to create a fully functional implementation of the above solution.
 We now have to cope with the prospect that we have further complexified the user experience.
 Students having to learn GitHub pull requests may be problematic enough on its own, but also introducing them to review repositories could prove counter-productive.
 
@@ -112,13 +113,13 @@ Any implementation will have to make sure that students reviewing code, should o
 A natural approach to this could be to have students only review code when the assignment deadline is passed.
 At this point all students have gotten either a passing or failing grade, and QuickFeed can safely assign reviewers.
 
-% Possible: No incentive for students to actually do code review when there is no penalty to refuse.
+% No incentive for students to actually do code review when there is no penalty to refuse.
 
 \subsection{Student feedback}
 
-Another important feature is to have students receive feedback, via GitHub workflows, on the code they create.
+Another important feature is to have students receive feedback, via GitHub workflows, on the code they write.
 We envision that this feedback should come in the form of a score or grade, determined by tests run on the student's code.
-Just as students currently receive feedback on an assignment as a whole, we want QuickFeed to accommodate the same for tasks.
+Just as students currently receive feedback on an assignment as a whole, we want QuickFeed to do the same for tasks.
 
 Currently, QuickFeed is only built around running tests on an assignment as a whole on the main branch.
 To accommodate pull requests, QuickFeed would first need to be expanded so that it can run tests on other branches.
@@ -136,19 +137,32 @@ QuickFeed will then need to somehow recreate that issue.
 We will also have to account for students closing and possibly merging pull requests that are not yet approved by a teacher.
 If this happens, QuickFeed must have the capacity to restore a working state for the task/assignment.
 
-\section{Analysis}
+\section{New Approach}
 
 So far in this chapter we have discussed the challenges associated with trying to implement our desired features.
-This section analyses our existing approach in light of these challenges.
+These challenges have forced us to rethink our current approach into a new one.
+This section discusses how we arrived at this new approach.
 
 By far the most challenging issue we have discussed so far, is how to have students access another student's code.
 Any solution seems vulnerable, as they leave the door open for possible problems and complications.
-To account for this vulnerability, any implementation seems highly time consuming and possibly complex.
-Through 
+To account for this vulnerability, a viable solution seems both complex, as well as time consuming to implement.
 
-\section{New Approach}
+A compromise was therefore agreed upon that would limit this whole project to only group assignments.
+Meaning that students will only do what is described in the desired workflow section, when they are doing group assignments.
+Furthermore, every task within a group assignment is expected to require an equal amount of work, and to be completed individually by a single group member.
+Code review will only be performed within a group, where every group member reviews one other member's code.
 
-A new approach that is to be implemented. Got to this approach through discussions, and attempted implementations.
+By limiting our scope to groups only, we avoid two of the challenges described in the previous section.
+First of all, we no longer have to worry about giving students access to other repository code, since they will all be using the same group repository anyways.
+Secondly, given that students will be solving tasks independently, we need not worry about when to assign them.
+
+Another big discussion, related to how we deliver student feedback on the individual task branches.
+Giving QuickFeed the ability to run task based tests would be a big project on its own, and not something that was desired by the supervisor. 
+A compromise was proposed; every assignment should only contain one task.
+If an assignment contains only one task, that task would then be the entire assignment, and we could simply run tests on the entire assignment as we already do.
+The problem with this compromise is that it defeats the purpose of supporting tasks in the first place, since having only one task is practically the same as having zero.
+In the end it was agreed that this part of the project would be treated primarily as research, and that any implementation would have to be somewhat imperfect.
+
 
 \section{Proposed Implementation}
 
