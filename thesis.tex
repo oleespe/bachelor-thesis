@@ -4,6 +4,25 @@
 \usepackage[english]{babel}
 \usepackage{uis-thesis}
 \usepackage{lipsum}           % remove this line when you removed all \lipsum commands
+\usepackage{listings}
+\renewcommand{\lstlistingname}{Code}
+\usepackage{listings-golang} % import this package after listings
+\usepackage{color}
+
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstset{ % add your own preferences
+    backgroundcolor=\color{backcolour},
+    basicstyle=\footnotesize,
+    keywordstyle=\color{blue},
+    stringstyle=\color{brown},
+    numbers=left,
+    numbersep=5pt,
+    showstringspaces=false, 
+    tabsize=4,
+    captionpos=b,
+    breaklines,
+}
 \newgeometry{margin=40mm}     % defines the geometry for the document
 \setstretch{1.2}              % defines the default line spacing for the document
 \setlength{\parindent}{0pt}

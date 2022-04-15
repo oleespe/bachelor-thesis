@@ -105,7 +105,7 @@ An implementation needs to handle, amongst other things, the following:
     \item How to associate actions between a review repository and the original student repository.
           E.g. if code is updated in the original, should it then also be updated in the other?
           And if so, how do we accomplish this?
-    \item How to fit pull requests into this approach?
+    \item How to fit pull requests into this approach.
 \end{itemize}
 
 Let us say that we, despite these challenges, managed to create a fully functional implementation of the above solution.
@@ -178,8 +178,10 @@ In the end it was agreed that this part of the project would be treated primaril
 Having simplified our approach in the previous section, we continue by looking at how we must expand QuickFeed to accommodate it.
 
 \subsection{Tasks and GitHub Issues}
+\label{sec:tasks_and_github_issues}
 
 As a start, QuickFeed needs to support task markdown files in the \textit{tests} repository.
+These task files will follow the standard format: \textit{task-*.md}.
 
 \begin{figure}[ht]
     \centering
@@ -199,6 +201,8 @@ Further, beyond the ability to create, delete and edit issues, QuickFeed must be
 This means that QuickFeed will have to compare old tasks versus new ones, and then proceed accordingly.
 We will therefore store representations of tasks in QuickFeed's internal database for this purpose.
 Storing tasks also allows us to easily handle late enrolling groups, as we can use them to immediately create the required issues.
+
+To edit issues, we will also need to internally store a reference to them in the database.
 
 % Database representation of issues.
 

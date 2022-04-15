@@ -3,9 +3,81 @@
 \chapter{Implementation}
 \label{ch:implementation}
 
-\section{Already implemented code}
+Text text
 
-Probably probably
+\section{Existing implementation}
+
+As we have already mentioned, an implementation has already been attempted for this project.
+Before we can begin with a new one, we first have to decide which parts of the existing one we want to use, and which to discard.
+These parts are summarized in this section.
+
+\subsection{SCM Expansion}
+
+The SCM package has been expanded for GitHub to support the following functions:
+
+\begin{itemize}
+    \item CreateIssue   - creates an issue on a repository.
+    \item EditRepoIssue - edits an issue on a repository.
+    \item GetRepoIssue  - retrieves an issue based on issue number and repository.
+    \item GetRepoIssues - retrieves all issues from a repository.
+\end{itemize}
+
+CreateIssue and EditRepoIssue would prove useful, and are used with only minor adjustments to them.
+The two other functions, centered around retrieving issues were not needed, but still used in earlier parts of the project when testing.
+
+\subsection{Logic}
+
+A lot of existing code was intended to handle the logic around managing tasks. 
+In short, this code was meant to do determine when to create, edit or delete issues on GitHub.
+The code did however not accomplish this in a functional manner.
+This lead to the dilemma of whether we should continue developing this faulty code, or simply start anew.
+In the end, it was decided that any attempt to fix the existing logic code would be more time consuming and confusing, than simply starting fresh.
+
+\subsection{Parsing Tasks}
+
+When a teacher pushes assignments to the \textit{tests} repository QuickFeed will run the function UpdateFromTestsRepo.
+In short, this function fetches the files of \textit{tests}, loops through them, and uses their contents to create or update the data records of all course assignments.
+Added as a part of this process, was code to also fetch task files in the repository, and use their contents to create a task data object.
+
+To support this, all \textit{task-*.md} files are expected to conform to a standard format.
+The first line should start with the character sequence "\# <task title>", followed by by two new line characters.
+Any following text will be treated as the task body or description.
+
+Using this format, the function newTask creates a task data object from any task file.
+
+\lstinputlisting[caption={Function that creates a task object from markdown content}, language=Golang, firstline=25, lastline=40]{code/tasks.go}
+
+Going forward, the general approach to parsing and creating tasks is left as it is, with only minor changes to the existing code.
+
+\section{Managing Tasks and Issues}
+
+Having looked at what existing code we decided to keep, we continue by exploring the part of the project that was implemented first, how to manage tasks and issues.
+Building on what is described in section \ref{sec:tasks_and_github_issues}, this section describes the actual implementation process.
+
+\subsection{Data structures}
+
+Two new messages are defined in the ag.proto file: \textbf{Task} and \textbf{Issue}.
+These are used to generate the data structures that we use throughout the rest of the project to represent tasks and issues respectively.
+
+\textbf{Task} is defined as follows:
+
+\lstinputlisting[caption={Task message}, firstline=185, lastline=193]{code/ag.proto}
+
+Every task is associated with one assignment via the assignmentID field.
+
+For assignments, \textit{order} is a number used to determine the order in which assignments are represented in a course.
+Tracking the order of the assignment a task came from, allows us to associate tasks and assignments without explicitly knowing the assignmentID, so long as our scope is limited to just a single course.
+This feature will become necessary later.
+
+The name field is used to associate tasks found on GitHub, with the ones stored in the database.
+If a task file with the name task-hello\_world.md is found within assignment1, then its corresponding name will be assignment1/hello\_world.
+
+\textbf{Issue} is defined as follows:
+
+\lstinputlisting[caption={Issue message}, firstline=195, lastline=200]{code/ag.proto}
+
+\subsection{Logic}
+
 
 \section{Tests}
 
