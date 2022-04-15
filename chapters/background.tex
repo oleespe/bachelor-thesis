@@ -3,7 +3,7 @@
 \chapter{Background}
 \label{ch:background}
 
-In this chapter we describe existing technology that will be referred to throughout the paper.
+In this chapter we describe existing technology and concepts that will be referred to throughout the paper.
 
 \section{GitHub}
 
@@ -54,19 +54,18 @@ Maybe maybe
 
 \section{QuickFeed}
 
-In this section we describe the features of QuickFeed that are important to this project.
+In this section we give a further description of how QuickFeed functions, and some of the technology it uses.
 
-\subsection{Current Workflow}
+\subsection{Fundamental Architecture}
+% Need more here if it is going to stay
 
-Explain the current workflow, such that it is apparent how it differs from the new one.
+QuickFeed provides two primary features.
+A web interface used by both teachers and students, and a backend that tests, scores and grades student submitted code.
 
-\subsection{Protobuf}
+The web interface is implemented with the Typescript programming language, using the React library.
+It is used by students to enroll in a course, create groups and receive feedback on their code.
 
-Maybe maybe
-
-\subsection{gRPC}
-
-Maybe maybe
+The backend is implemented using the Go programming language.
 
 \subsection{QuickFeed Repository Structure}
 
@@ -77,23 +76,24 @@ They are all described as follows:
 \textit{info}: This repository simply holds information about a course.
 The repository is available for all students, and would typically work as a simple information hub.
 
-\textit{assignments}: The repository responsible for representing the assignments themselves.
+\textit{assignments}: The repository responsible for representing the assignments themselves to students.
 Every assignment in a course is represented as a folder within this repository.
-Students pull assignments from here, to their own local git repositories.
+As teachers push new assignments to this repository, or update existing ones, students pull the changes to their own local git repositories.
 
-\textit{tests}: Within this repository every assignment is represented as a distinct folder.
-The repository differs from \textit{assignments}, because contains specific assignment information, as well as test data.
+\textit{tests}: Within this repository every assignment is also represented as a distinct folder.
+The repository differs from \textit{assignments}, because it also contains assignment information and test code.
 
-Assignment information comes in the form of a \textit{assignment.yml} file, and should be present in every assignment folder.
-Content within this file is used to generate the assignment itself, and may contain settings such as the assignment deadline.
+Assignment information is described in a \textit{assignment.yml} file, and should be present in every assignment folder.
+Content within this file is used when QuickFeed creates the assignment, and can contain settings such as the assignment deadline.
 
-Test data comes in the form of test code that should be run on the submitted student code.
-Additionally, \textit{tests} may contain \textit{run.sh} script files, usually in a separate \textit{scripts} folder, or within each assignment folder.
+Test code is any code created by the teaching staff used to test the student submitted code.
+
+Additionally, \textit{tests} may contain \textit{run.sh} script files in a separate \textit{scripts} folder, or within an assignment folder.
 The \textit{scripts} folder can also contain a Dockerfile, used to create a test environment.
 The test code, script files and Dockerfile each contribute to how tests are run on student code.
-Even though QuickFeed supports running automatic tests on student code, it is not required.
-It is also worth noting that students never have access to this repository.
+Even though QuickFeed supports running automatic tests on student code, it is not a must for QuickFeed to function.
 
+Being a repository that is used and managed solely by the teaching staff, it follows that students do not have access to its contents.
 
 \begin{figure}[ht]
     \centering
@@ -103,14 +103,15 @@ It is also worth noting that students never have access to this repository.
 \end{figure}
 
 Student repositories: There are two types of student repositories, user and group repositories.
-Where a user, in this case, would simply be any student who has enrolled in the course, and a group is a multitude of students.
-Their repository names follow the same format: \textit{name}-labs.
+A user in this case, would simply be any student who has enrolled in the course, and a group is a multitude of students.
+A group on the other hand, is any number of students that are working together, and are enrolled separately.
+Naturally, student repositories are only accessible by the students associated with them, and the teaching staff.
+
+Student repositories are named according to the following format: \textit{"name"-labs}.
 For an enrolled student, \textit{name} would be their GitHub user name.
-A group's name however, would be defined by the group members themselves, when they enroll the group.
+A group's \textit{name} however, would be defined by the group members themselves when they enroll the group.
 
-These repositories are the repositories students push their code to.
-And it is this code that QuickFeed tests, scores and grades.
-
+These repositories are the ones students push their code to as they work on assignments.
 
 \begin{figure}[ht]
     \centering
@@ -118,6 +119,19 @@ And it is this code that QuickFeed tests, scores and grades.
     \caption{GitHub repository structure for a QuickFeed course}
     \label{fig:qf-repository-structure}
 \end{figure}
+
+\subsection{Assignment Submission Process}
+
+To fully understand how a standard assignment submission process usually goes, we will detail it in this section.
+
+As teachers push their assignments to the \textit{assignments} repository, students will pull it to their own repositories.
+When students feel compelled, they push their source code to their respective GitHub repository.
+This triggers QuickFeed to run the tests that are defined for that assignment in the \textit{tests} repository.
+Students can then view the results of these tests through QuickFeed's web based user interface.  
+This allows students to see which parts of their code failed, if any.
+
+If an assignment is automatically graded, they will receive a passing grade ones enough tests pass.
+If it is instead set to be manually graded, a teacher must at some point explicitly approve the assignment.
 
 \subsection{Webhooks}
 

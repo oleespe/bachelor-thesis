@@ -3,7 +3,17 @@
 \chapter{Approach}
 \label{ch:approach}
 
-Text text
+In this chapter we discuss how this project was approached.
+
+Though the project itself is fairly straight forward, how to approach it became quite challenging.
+Planning out how to implement the desired features in a good and approachable manner, would prove highly time consuming and hard.
+Even the desired features themselves were hard enough to conceptualise.
+A problem that was not helped by the fact that there was no clear single source of information to describe them.
+As a consequence, the approach to this project was always changing, as new desires and ideas were discussed.
+
+In this chapter we discuss this ever changing approach.
+How it started as a continuation of previous approaches and a desired workflow.
+And how it eventually was altered to combat the rising challenges and issues that were faced.
  
 \section{Existing Approach}
 
@@ -126,8 +136,6 @@ To accommodate pull requests, QuickFeed would first need to be expanded so that 
 Secondly, QuickFeed will need the ability to run tests solely based on tasks.
 The first accommodation is pretty straight forward, but the second one would require a massive rethink of some of QuickFeed's fundamental architecture.
 
-% How would we make QuickFeed run only the tests that are relevant for a given task
-
 \subsection{Human Error}
 
 Finally, we have to take into consideration the possibility that students may do things that we simply have not accounted for.
@@ -141,7 +149,7 @@ If this happens, QuickFeed must have the capacity to restore a working state for
 
 So far in this chapter we have discussed the challenges associated with trying to implement our desired features.
 These challenges have forced us to rethink our current approach into a new one.
-This section discusses how we arrived at this new approach.
+This section discusses what this new approach is, and how we arrived at it.
 
 By far the most challenging issue we have discussed so far, is how to have students access another student's code.
 Any solution seems vulnerable, as they leave the door open for possible problems and complications.
@@ -154,16 +162,51 @@ Code review will only be performed within a group, where every group member revi
 
 By limiting our scope to groups only, we avoid two of the challenges described in the previous section.
 First of all, we no longer have to worry about giving students access to other repository code, since they will all be using the same group repository anyways.
-Secondly, given that students will be solving tasks independently, we need not worry about when to assign them.
+Secondly, given that students will be solving tasks independently, we need not worry about when to assign reviewers, and can simply assign them when the pull request is created.
 
-Another big discussion, related to how we deliver student feedback on the individual task branches.
+Another big discussion related to how we deliver student feedback on the individual task branches.
 Giving QuickFeed the ability to run task based tests would be a big project on its own, and not something that was desired by the supervisor. 
 A compromise was proposed; every assignment should only contain one task.
 If an assignment contains only one task, that task would then be the entire assignment, and we could simply run tests on the entire assignment as we already do.
 The problem with this compromise is that it defeats the purpose of supporting tasks in the first place, since having only one task is practically the same as having zero.
 In the end it was agreed that this part of the project would be treated primarily as research, and that any implementation would have to be somewhat imperfect.
 
+% Maybe summarize the new workflow. Could be a new section.
 
-\section{Proposed Implementation}
+\section{QuickFeed Expansion}
 
-How we actually plan to implement features.
+Having simplified our approach in the previous section, we continue by looking at how we must expand QuickFeed to accommodate it.
+
+\subsection{Tasks and GitHub Issues}
+
+As a start, QuickFeed needs to support task markdown files in the \textit{tests} repository.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[scale=0.8]{photos/tests-repository-structure-tasks.PNG}
+    \caption{Example of a tests repository with tasks}
+    \label{fig:tests-repository-structure-tasks}
+\end{figure}
+
+As we see in the figure above, \textit{assignment1} and \textit{assignment2} both have tasks in them.
+
+In essence we want these tasks to be represented as issues on all course group repositories.
+This means that once a task is created by a teacher, and pushed to GitHub, the corresponding issues should be created on GitHub.
+If a task is edited or deleted, QuickFeed must respectively either edit or delete the associated issue.
+To manage the creation, deletion and editing of issues, QuickFeed's SCM API will be expanded to have such a capacity.
+
+Further, beyond the ability to create, delete and edit issues, QuickFeed must be logically capable of determining when to perform these actions.
+This means that QuickFeed will have to compare old tasks versus new ones, and then proceed accordingly.
+We will therefore store representations of tasks in QuickFeed's internal database for this purpose.
+Storing tasks also allows us to easily handle late enrolling groups, as we can use them to immediately create the required issues.
+
+% Database representation of issues.
+
+% To ensure that the task markdown is correctly parsed, they need to follow a standard format.
+% To be correctly parsed the first line will be prefixed with the "# " character sequence, followed by the actual title.
+
+\subsection{Pull Requests}
+
+% To support pull requests, we need to expand
+
+\subsection{Workflows}
