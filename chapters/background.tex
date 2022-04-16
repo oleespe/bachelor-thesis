@@ -59,7 +59,7 @@ In this section we give a further description of how QuickFeed functions, and so
 \subsection{Fundamental Architecture}
 % Need more here if it is going to stay
 
-% Need protobuf, maybe gorm
+% Need protobuf, maybe gorm, maybe UpdateFromTestsRepo, maybe Assignment message
 
 QuickFeed provides two primary features.
 A web interface used by both teachers and students, and a backend that tests, scores and grades student submitted code.
@@ -132,7 +132,7 @@ This triggers QuickFeed to run the tests that are defined for that assignment in
 Students can then view the results of these tests through QuickFeed's web based user interface.  
 This allows students to see which parts of their code failed, if any.
 
-If an assignment is automatically graded, they will receive a passing grade ones enough tests pass.
+If an assignment is automatically graded, they will receive a passing grade once enough tests pass.
 If it is instead set to be manually graded, a teacher must at some point explicitly approve the assignment.
 
 \subsection{Webhooks}
