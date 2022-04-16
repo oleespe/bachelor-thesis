@@ -12,6 +12,7 @@ Before we can begin with a new one, we first have to decide which parts of the e
 These parts are summarized in this section.
 
 \subsection{SCM Expansion}
+\label{sec:scm_expansion}
 
 The SCM package has been expanded for GitHub to support the following functions:
 
@@ -59,7 +60,7 @@ Moving forward in this chapter, we make the following distinction between found 
 Found tasks and assignments are data objects created from the contents within the \textit{tests} repository.
 Existing tasks and assignments are data-objects based on data records that we retrieve from the database.
 
-\subsection{Data structures}
+\subsection{Data Structures}
 
 Two new messages are defined in the ag.proto file: \textbf{Task} and \textbf{Issue}.
 These are used to generate the data structures that we use throughout the rest of the project.
@@ -102,7 +103,8 @@ More specifically, we create the function handleTasks that handles all logic rel
 It is supplied with every found assignment, and their respective found tasks, as an argument.
 The function itself is run at the end of UpdateFromTestsRepo.
 
-\lstinputlisting[caption={The function handleTasks, responsible for all task related logic}, language=Golang, firstline=64, lastline=95]{code/tasks.go}
+\lstinputlisting[caption={The function handleTasks, responsible for all task related logic}, 
+                language=Golang, label={code:handleTasks}, firstline=64, lastline=95]{code/tasks.go}
 
 The logic contained in this function will be explained in the following sections.
 
@@ -122,11 +124,30 @@ This method is run at the start of handleTasks, and can be summarized in the fol
 To support this logic, SynchronizeAssignmentTasks utilizes Go's built in maps to map tasks by both assignment order and name.
 When looping through all existing assignments and then their respective existing tasks, we can use this mapping to perform all checks described in the chart above.
 
-\lstinputlisting[caption={Logic performed in SynchronizeAssignmentTasks}, language=Golang, firstline=41, lastline=76]{code/gormdb_tasks.go}
+\lstinputlisting[caption={Logic performed in SynchronizeAssignmentTasks}, 
+                language=Golang, label={code:SynchronizeAssignmentTasks}, firstline=41, lastline=76]{code/gormdb_tasks.go}
 
 SynchronizeAssignmentTasks also returns the tasks it has created or updated, which will be important when synchronizing issues.
 
 \subsection{Synchronizing Issues}
+
+When we synchronize issues we must make sure to synchronize not only the issues stored in the database, but also the GitHub issues themselves.
+
+As mentioned, SynchronizeAssignmentTasks already determines which tasks have been created, updated or deleted.
+In fact, when it detects that a task has been deleted, it deletes not only the task but all associated issue records, as seen on line 11 in code \ref{code:SynchronizeAssignmentTasks}.
+Issue data records also never need to be updated, since they carry no other information than an issue number, which will always remain static.
+The only remaining database related synchronization for issues is therefore creating them.
+
+Creating and updating GitHub issues will use the preexisting SCM functions described in section \ref{sec:scm_expansion}.
+To delete issues, we wanted to expand on this API to give it that capacity.
+It turned out however, that GitHub's REST API did not support deleting issues.
+An alternative could be to instead use GraphQL a query language for API's, but instead we went for a simpler solution.
+Instead of deleting issues, they are closed, and their body and title are inserted with a statement indicating that the associated task has been deleted.
+
+The entire process of synchronizing issues happens on line 16 to 31 in handleTasks \ref{code:handleTasks}
+In short, we use the created and updated tasks returned by SynchronizeAssignmentTasks.
+For every group repository in a course, we then create issues or update issues accordingly.
+Any task that has been marked as deleted, will trigger the updateIssues function to close the issue.
 
 \section{Tests}
 

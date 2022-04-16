@@ -54,26 +54,34 @@ Maybe maybe
 
 \section{QuickFeed}
 
-In this section we give a further description of how QuickFeed functions, and some of the technology it uses.
-
-\subsection{Fundamental Architecture}
-% Need more here if it is going to stay
-
-% Need protobuf, maybe gorm, maybe UpdateFromTestsRepo, maybe Assignment message
-
 QuickFeed provides two primary features.
 A web interface used by both teachers and students, and a backend that tests, scores and grades student submitted code.
 
 The web interface is implemented with the Typescript programming language, using the React library.
 It is used by students to enroll in a course, create groups and receive feedback on their code.
 
-The backend is implemented using the Go programming language.
+The backend is primarily implemented using the Go programming language, and is divided into different modules, each with its own set of responsibilities.
+It also features an SqLite-database, implemented with the GORM library.
+
+In this section we give a description of some of QuickFeed's features that are important in this project.
+
+\subsection{Protocol Buffers}
+
+Protocol buffers is a language-neutral mechanism for serializing structured data. % (ref: https://developers.google.com/protocol-buffers)
+It is often abbreviated as protobuf, and is used to define messages in a \textit{.proto} file.
+When the file is compiled, data structures and methods for the desired language are generated in a separate file.
+
+QuickFeed uses this method to generate the basis of nearly all its data structures, which are then stored in its internal database.
+
+\lstinputlisting[caption={Repository message}, firstline=90, lastline=107]{code/ag.proto}
+
+When compiled, this message generates the Repository data structure, which in turn is used to represent any QuickFeed managed repository.
 
 \subsection{QuickFeed Repository Structure}
 
 When a teacher creates a course in QuickFeed, a GitHub organization is created to represent it.
 Within this organization, three initial repositories are created, as well as student repositories when students enroll.
-They are all described as follows:
+They are all described as follows.
 
 \textit{info}: This repository simply holds information about a course.
 The repository is available for all students, and would typically work as a simple information hub.
