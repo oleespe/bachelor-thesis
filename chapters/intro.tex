@@ -4,44 +4,40 @@
 \label{ch:intro}
 
 The University of Stavanger has for the last couple of years been developing a project known as QuickFeed.
-Originally developed in 2015, the project has since then been through numerous changes. % (ref)
-QuickFeed has since its inception been used by several computer science classes at the university.
+Since its inception in 2015, both teachers and students have contributed to its development. % (ref)
 
-QuickFeed aims to ease the process of managing student assignments, and does so for both students and the teaching staff.
+QuickFeed aims to ease the process of submitting student assignments for both students and the teaching staff.
 Though not exclusively, the project is primarily developed with the intent of handling code based assignments.
-QuickFeed will run predetermined tests on submitted code, and instantly provide feedback back to students through its web interface.
+QuickFeed will run predetermined tests on submitted code, and will use their results to provide feedback for students via its web interface.
 Using QuickFeed, assignments can be both scored and graded without the teaching staff ever having to intervene.
 
 To accommodate these features, QuickFeed uses GitHub to, amongst other things, manage student code.
 GitHub is therefore one of the primary sites students interact with, when working on QuickFeed managed assignments.
-Because of this, there has been a desire to further integrate QuickFeed with GitHub.
-Specifically, with the issues, pull request and workflow features the service provides.
+Because of this, there is a desire to further integrate QuickFeed with GitHub.
+Specifically, we aim to use GitHub's pull request and issue features to give students another avenue for manual and automatic feedback.
 
-\section{Background and Motivation}
+\section{Motivation}
 \label{sec:motivation}
 
-The motivation for this project is to have GitHub issues, pull requests and workflows used when students are working on assignments.
-Given that QuickFeed already heavily uses GitHub, it seems logical and advantageous to use more of the latter's features than we currently do.
+In the current iteration of QuickFeed, students only receive automated feedback on their code through QuickFeed's custom web interface.
+Here, they can see what parts of their code is failing, and also if they have successfully passed the assignment.
+The motivation behind this thesis is to further expand on how students receive feedback when working on an assignment.
 
-More specifically, there is a desire to use GitHub pull requests as a hub for students.
-If integrated with QuickFeed, pull requests can further expand on how students receive feedback, through the use of GitHub workflows.
-Feedback can also be provided within a pull request through code review, either by other co-students or by the teaching staff.
-
-This project is a continuation of the work done by Adil Khurshid. % (ref)
-The motivation behind Adil's work, is the same as for this thesis.
-His work was however not finished, which is why it is continued here.
+Using GitHub pull requests we can facilitate feedback directly on student code by using its review features.
+Pull requests also have the potential to support automatic feedback, e.g. by another GitHub feature called workflows.
 
 \section{Objectives}
 
-The objectives of the project are described as follows:
-% This is maybe too descriptive, and parts of it are explained in other locations.
-\begin{itemize}
-    \item Teachers should be able to separate individual assignments into smaller tasks.
-    \item QuickFeed should create an issue for each task on student repositories.
-    \item Students should be able to create pull requests based on these issues.
-    \item QuickFeed should assign both student and teacher reviewers to them.
-    \item QuickFeed should use GitHub workflows to display some sort of feedback, based on the tests run.
-\end{itemize}
+This project has the two following objectives.
+
+To provide automated and manual feedback on student code, QuickFeed will support using GitHub pull requests.
+Facilitating manual feedback means QuickFeed will decide when to assign reviewers to a pull request and who to assign.
+When a pull request is approved, QuickFeed will also determine if this approval was legitimate.
+
+To further accommodate pull requests, we want QuickFeed to support task markdown files within an assignment.
+These will function as a way for teachers to subdivide their assignment into smaller parts.
+For each task, a GitHub issue will be created on every student repository.
+These issues are the ones students will base their pull request on.
 
 \section{Approach and Contributions}
 

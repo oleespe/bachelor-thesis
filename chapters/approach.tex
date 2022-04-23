@@ -197,19 +197,25 @@ This means that once a task is created by a teacher, and pushed to GitHub, the c
 If a task is edited or deleted, QuickFeed must respectively either edit or delete the associated issue.
 To manage the creation, deletion and editing of issues, QuickFeed's SCM API will be expanded to have such a capacity.
 
-Further, beyond the ability to create, delete and edit issues, QuickFeed must be logically capable of determining when to perform these actions.
+Beyond the ability to create, delete and edit issues, QuickFeed must be logically capable of determining when to perform these actions.
 This means that QuickFeed will have to compare old tasks versus new ones, and then proceed accordingly.
 We will therefore store representations of tasks in QuickFeed's internal database for this purpose.
 Storing tasks also allows us to easily handle late enrolling groups, as we can use them to immediately create the required issues.
 
 To edit issues, we will also need to internally store a reference to them in the database.
 
-% Database representation of issues.
-
-% To ensure that the task markdown is correctly parsed, they need to follow a standard format.
-% To be correctly parsed the first line will be prefixed with the "# " character sequence, followed by the actual title.
-
 \subsection{Pull Requests}
+
+The following questions are relevant for both this and the implementation part.
+
+How do we listen to the webhook events that are relevant?
+How do we single out the relevant events?
+How should the pull requests be created?
+How do we determine when to assign reviewers, when we do not have the ability to test based on tasks?
+How do we ensure that reviewers are evenly distributed?
+How do we ensure that reviewers are not assigned to their own repository?
+What if a student pushes from a local branch that differs from a remote one?
+What if an assignment is manually graded?
 
 % To support pull requests, we need to expand
 
