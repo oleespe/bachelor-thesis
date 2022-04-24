@@ -13,7 +13,7 @@ In this section we explore features of GitHub that are relevant to this thesis.
 
 GitHub issues is a useful feature for tracking, discussing and logging various issues/problems on a GitHub repository.
 Any collaborator to a repository may open a GitHub issue, and describe any problem, idea or issue they have.
-Other users may then contribute to the issue by commenting on it, easing the communication process within a project.
+Other users may then contribute to the issue by commenting on it; thus easing the communication process within a project.
 GitHub issues can therefore function as a discussion hub, and makes it especially useful for larger projects involving several people. 
 
 \begin{figure}[ht]
@@ -25,26 +25,25 @@ GitHub issues can therefore function as a discussion hub, and makes it especiall
 
 \subsection{Pull Requests}
 
-Pull requests are a desire to merge any feature branch, into the main branch of a repository.
+Pull requests are a desire to merge any feature branch, into the main branch of a git repository.
 GitHub supports managing pull requests through its user interface, and allows any contributor to a repository to create a pull request.
 Through the user interface, progress on a branch can be tracked, reviewed and commented on.
 In this sense, GitHub pull requests function as a central hub for feature branches.
 
-Code review is also a central part of GitHub pull requests.
-Any eligible user may review, comment on and request changes to the source code of a given pull request.
+Code review is also a central part of the pull request process.
+Any eligible user may review, comment on, and request changes to the source code of a given pull request.
 The reviewer may also use reviews to approve a pull request for merging.
 
 Pull requests can also be linked to issues.
 Doing this will automatically associate any linked issue to the pull request, and cause them to close when the pull request closes.
 A common workflow would be to create an issue, describing a problem, and then creating an associated pull request for this issue.
 
-Through its features, GitHub pull requests provide an efficient way of implementing new features to any project.
-As well as easing the communication of desired changes to any source code.
+Through its features, GitHub pull requests provide an efficient and manageable way of implementing new features to any project.
 
 \begin{figure}[ht]
     \centering
     \includegraphics[width=\textwidth]{photos/pull-request.PNG}
-    \caption{Example of parts of a GitHub pull request}
+    \caption{Example of a GitHub pull request}
     \label{fig:pull-request}
 \end{figure}
 
@@ -53,20 +52,21 @@ As well as easing the communication of desired changes to any source code.
 Maybe maybe
 
 \section{QuickFeed}
-
+% TODO: Revise
 QuickFeed provides two primary features.
-A web interface used by both teachers and students, and a backend that tests, scores and grades student submitted code.
+A web interface and a backend that tests, scores and grades student submitted code.
 
 The web interface is implemented with the Typescript programming language, using the React library.
 It is used by students to enroll in a course, create groups and receive feedback on their code.
+Teachers can use it to create and manage courses.
 
-The backend is primarily implemented using the Go programming language, and is divided into different modules, each with its own set of responsibilities.
+The backend is primarily implemented using the Go programming language, and is divided into different modules, each with its own set of functionality.
 It also features an SqLite-database, implemented with the GORM library.
 
 In this section we give a description of some of QuickFeed's features that are important in this project.
 
 \subsection{Protocol Buffers}
-
+% TODO: Revise
 Protocol buffers is a language-neutral mechanism for serializing structured data. % (ref: https://developers.google.com/protocol-buffers)
 It is often abbreviated as protobuf, and is used to define messages in a \textit{.proto} file.
 When the file is compiled, data structures and methods for the desired language are generated in a separate file.
@@ -78,6 +78,7 @@ QuickFeed uses this method to generate the basis of nearly all its data structur
 When compiled, this message generates the Repository data structure, which in turn is used to represent any QuickFeed managed repository.
 
 \subsection{QuickFeed Repository Structure}
+\label{sec:quickfeed-repository-structure}
 
 When a teacher creates a course in QuickFeed, a GitHub organization is created to represent it.
 Within this organization, three initial repositories are created, as well as student repositories when students enroll.
@@ -86,22 +87,25 @@ They are all described as follows.
 \textit{info}: This repository simply holds information about a course.
 The repository is available for all students, and would typically work as a simple information hub.
 
-\textit{assignments}: The repository responsible for representing the assignments themselves to students.
+\textit{assignments}: The repository responsible for presenting the assignments to students.
 Every assignment in a course is represented as a folder within this repository.
 As teachers push new assignments to this repository, or update existing ones, students pull the changes to their own local git repositories.
 
-\textit{tests}: Within this repository every assignment is also represented as a distinct folder.
-The repository differs from \textit{assignments}, because it also contains assignment information and test code.
+\textit{tests}: Within this repository, every assignment is also represented as a distinct folder.
+The repository differs from \textit{assignments}, because every assignment folder contains a \textit{assignment.yml} file and test code.
+In addition, the repository can contain a \textit{scripts} folder, containing a \textit{run.sh} file and a Dockerfile.
 
-Assignment information is described in a \textit{assignment.yml} file, and should be present in every assignment folder.
-Content within this file is used when QuickFeed creates the assignment, and can contain settings such as the assignment deadline.
+The \textit{assignment.yml} file is used by teachers to specify assignment specific settings.
+As an example, it can contain information on the assignment deadline, whether it is manually graded, and more.
 
-Test code is any code created by the teaching staff used to test the student submitted code.
+The \textit{run.sh} file contains the script used by QuickFeed when testing student code.
+As explained, it is contained within the \textit{scripts} folder, but can also be located within the specific assignments themselves.
+When running tests on an assignment, QuickFeed will prioritize using any assignment specific script files.
 
-Additionally, \textit{tests} may contain \textit{run.sh} script files in a separate \textit{scripts} folder, or within an assignment folder.
-The \textit{scripts} folder can also contain a Dockerfile, used to create a test environment.
-The test code, script files and Dockerfile each contribute to how tests are run on student code.
-Even though QuickFeed supports running automatic tests on student code, it is not a must for QuickFeed to function.
+Finally, the Dockerfile contained within \textit{scripts} is used to create a docker image.
+Within this image, QuickFeed runs the appropriate script, derived from \textit{run.sh}.
+% TODO: Maybe explain more of this process? How these scripts usually work, i.e. they pull the student code and assignment code, and then run go test -v.
+% And also how the scores package is involved. Should probably be in a separate section.
 
 Being a repository that is used and managed solely by the teaching staff, it follows that students do not have access to its contents.
 
@@ -113,11 +117,11 @@ Being a repository that is used and managed solely by the teaching staff, it fol
 \end{figure}
 
 Student repositories: There are two types of student repositories, user and group repositories.
-A user in this case, would simply be any student who has enrolled in the course, and a group is a multitude of students.
-A group on the other hand, is any number of students that are working together, and are enrolled separately.
+A user in this case would simply be any student who has enrolled in the course.
+Whereas a group is any number of students that are working together.
 Naturally, student repositories are only accessible by the students associated with them, and the teaching staff.
 
-Student repositories are named according to the following format: \textit{"name"-labs}.
+Student repositories are named according to the following format: \textit{name-labs}.
 For an enrolled student, \textit{name} would be their GitHub user name.
 A group's \textit{name} however, would be defined by the group members themselves when they enroll the group.
 
@@ -134,7 +138,7 @@ These repositories are the ones students push their code to as they work on assi
 
 To fully understand how a standard assignment submission process usually goes, we will detail it in this section.
 
-As teachers push their assignments to the \textit{assignments} repository, students will pull it to their own repositories.
+As teachers push their assignments to the \textit{assignments} repository, students will pull it to their own local repositories.
 When students feel compelled, they push their source code to their respective GitHub repository.
 This triggers QuickFeed to run the tests that are defined for that assignment in the \textit{tests} repository.
 Students can then view the results of these tests through QuickFeed's web based user interface.  
@@ -172,4 +176,4 @@ The current iteration of QuickFeed supports interacting with GitHub through this
 The library itself, communicates with GitHub's own REST API using HTTP requests.
 
 The SCM API allows QuickFeed to perform various tasks, such as creating/updating repositories, creating webhooks, managing teams and more.
-It, together with webhooks, therefore form a 2-way communication stream between QuickFeed and GitHub.
+It, together with webhooks, form a 2-way communication stream between QuickFeed and GitHub.

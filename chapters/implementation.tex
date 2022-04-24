@@ -8,7 +8,7 @@ Text text
 \section{Existing implementation}
 
 As we have already mentioned, an implementation has already been attempted for this project.
-Before we can begin with a new one, we first have to decide which parts of the existing one we want to use, and which to discard.
+Before we can begin with a new one, we first have to decide which parts of it we want to use, and which to discard.
 These parts are summarized in this section.
 
 \subsection{SCM Expansion}
@@ -31,19 +31,19 @@ The two other functions, centered around retrieving issues were not needed, but 
 A lot of existing code was intended to handle the logic around managing tasks. 
 In short, this code was meant to do determine when to create, edit or delete issues on GitHub.
 The code did however not accomplish this in a functional manner.
-This lead to the dilemma of whether we should continue developing this faulty code, or simply start anew.
-In the end, it was decided that any attempt to fix the existing logic code would be more time consuming and confusing, than simply starting fresh.
+This lead to the dilemma of whether to continue developing this faulty code, or simply start anew.
+In the end, we decided that any attempt to fix the existing logic code would be more time consuming and confusing than simply starting fresh.
 
 \subsection{Parsing Tasks}
 \label{sec:parsing_tasks}
 
-When a teacher pushes assignments to the \textit{tests} repository QuickFeed will run the function UpdateFromTestsRepo.
-In short, this function fetches the files of \textit{tests}, loops through them, and uses their contents to create or update the data records of all course assignments.
-Added as a part of this process, was code to also fetch task files in the repository, and use their contents to create a task data object.
+When a teacher pushes assignments to the \textit{tests} repository, QuickFeed will run the function UpdateFromTestsRepo.
+In short, this function creates a local copy of the folder structure found in \textit{tests}, and uses it to create or update the data-record of every assignment.
+Added as a part of this process, was code to also fetch all task markdown files in the repository, and use their contents to create a task data object.
 
 To support this, all \textit{task-*.md} files are expected to conform to a standard format.
 The first line should start with the character sequence "\# <task title>", followed by by two new line characters.
-Any following text will be treated as the task body or description.
+Any following text there after will be treated as the task body or description.
 
 Using this format, the function newTask creates a task data object from any task file.
 
@@ -53,12 +53,28 @@ Going forward, the general approach to parsing and creating tasks is left as it 
 
 \section{Managing Tasks and Issues}
 
-Having looked at what existing code we decided to keep, we continue by exploring the part of the project that was implemented first, how to manage tasks and issues.
-Building on what is described in section \ref{sec:tasks_and_github_issues}, this section describes the actual implementation process.
+Having looked at what existing code we decided to keep, we continue by exploring the part of the project that was implemented first; how to manage tasks and issues.
 
-Moving forward in this chapter, we make the following distinction between found tasks and assignments, and existing tasks and assignments.
-Found tasks and assignments are data objects created from the contents within the \textit{tests} repository.
+Moving forward in this chapter, we make the following distinction between found tasks/assignments, and existing tasks/assignments.
+Found tasks and assignments are data objects created from the contents found within the \textit{tests} repository.
 Existing tasks and assignments are data-objects based on data records that we retrieve from the database.
+
+\subsection{Overview}
+
+This section gives an overview of the features QuickFeed will support through this implementation.
+
+Teachers can now create \textit{task-*.md} files inside individual assignments in \textit{tests}, as illustrated below.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[scale=0.8]{photos/tests-repository-structure-tasks.PNG}
+    \caption{Example of a tests repository with tasks}
+    \label{fig:tests-repository-structure-tasks}
+\end{figure}
+
+When they are pushed to GitHub, an issue is created on every group repository to represent them.
+When teachers changes a task, either by editing it or deleting it, these changes are reflected on their associated issues.
+I.e. every issue is in sync with the task that created it.
 
 \subsection{Data Structures}
 
@@ -71,11 +87,13 @@ These are used to generate the data structures that we use throughout the rest o
 
 Every task is associated with one assignment via the \textit{assignmentID} field.
 
-For assignments, \textit{order} is a number used to determine the order in which assignments are represented in a course.
-Tracking the order of the assignment a task came from, allows us to associate tasks and assignments without explicitly knowing the assignment ID, so long as our scope is limited to just a single course.
+For an assignment, \textit{order} is a number used to determine the order in which it is represented in a course.
+It is set by a teacher in the assignment \textit{assignment.yml} file, which is described in section \ref{sec:quickfeed-repository-structure}.
+When we create a new task, keeping track of the corresponding assignment order is useful.
+It allows us to associate tasks and assignments without explicitly knowing the assignment ID, so long as our scope is limited to just a single course.
 A feature that will prove necessary.
 
-The \textit{name} field is used to associate tasks found on GitHub, with the ones stored in the database.
+The \textit{name} field is used to associate tasks found in \textit{tests}, with the ones stored in the database.
 If a task file with the name task-hello\_world.md is found within assignment1, then its corresponding name will be assignment1/hello\_world.
 This name is set when the task itself is parsed, as described in section \ref{sec:parsing_tasks}.
 
@@ -92,14 +110,14 @@ As it will become important in the next section, we will also mention that a mod
 \lstinputlisting[caption={Assignment message}, firstline=168, lastline=183]{code/ag.proto}
 
 On line 14 on the above code we see that the message has repeated tasks.
-When we compile it, the resulting data structure can hold a slice of tasks.
+When we compile it, the resulting data structure can hold a list of tasks.
 
 \subsection{Main Logic}
 
-As mentioned in section \ref{sec:parsing_tasks}, UpdateFromTestsRepo is the function that is run when someone pushes to the \textit{tests} repository.
+As mentioned in section \ref{sec:parsing_tasks}, UpdateFromTestsRepo is run when someone pushes to the \textit{tests} repository.
 Since tasks and issues need to be synchronized every time this happens, all logic for doing so will happen here.
 
-More specifically, we create the function handleTasks that handles all logic relating to tasks.
+More specifically, we create the function handleTasks that manages all logic relating to tasks.
 It is supplied with every found assignment, and their respective found tasks, as an argument.
 The function itself is run at the end of UpdateFromTestsRepo.
 
@@ -111,7 +129,7 @@ The logic contained in this function will be explained in the following sections
 \subsection{Synchronizing Tasks}
 
 When teachers create, edit, and delete tasks, we must make sure that the same happens in QuickFeed's internal database.
-To accomplish this, we created the database method SynchronizeAssignmentTasks to synchronize tasks correctly.
+To accomplish this, we create the database method SynchronizeAssignmentTasks.
 This method is run at the start of handleTasks, and can be summarized in the following chart.
 
 \begin{figure}[ht]
@@ -122,7 +140,7 @@ This method is run at the start of handleTasks, and can be summarized in the fol
 \end{figure}
 
 To support this logic, SynchronizeAssignmentTasks utilizes Go's built in maps to map tasks by both assignment order and name.
-When looping through all existing assignments and then their respective existing tasks, we can use this mapping to perform all checks described in the chart above.
+Given that we are limited in scope to a single course, we can use this mapping to associate every existing task to their found counterpart.
 
 \lstinputlisting[caption={Logic performed in SynchronizeAssignmentTasks}, 
                 language=Golang, label={code:SynchronizeAssignmentTasks}, firstline=41, lastline=76]{code/gormdb_tasks.go}
@@ -135,20 +153,26 @@ When we synchronize issues we must make sure to synchronize not only the issues 
 
 As mentioned, SynchronizeAssignmentTasks already determines which tasks have been created, updated or deleted.
 In fact, when it detects that a task has been deleted, it deletes not only the task but all associated issue records, as seen on line 11 in code \ref{code:SynchronizeAssignmentTasks}.
-Issue data records also never need to be updated, since they carry no other information than an issue number, which will always remain static.
+Issue data records also never need to be updated, since they carry no other information than an issue number, which always remains static.
 The only remaining database related synchronization for issues is therefore creating them.
 
-Creating and updating GitHub issues will use the preexisting SCM functions described in section \ref{sec:scm_expansion}.
 To delete issues, we wanted to expand on this API to give it that capacity.
-It turned out however, that GitHub's REST API did not support deleting issues.
-An alternative could be to instead use GraphQL a query language for API's, but instead we went for a simpler solution.
-Instead of deleting issues, they are closed, and their body and title are inserted with a statement indicating that the associated task has been deleted.
+It turns out however, that GitHub's REST API does not support deleting issues.
+An alternative could be to use GraphQL, a query language for API's, but instead we went for a simpler solution.
 
-The entire process of synchronizing issues happens on line 16 to 31 in handleTasks \ref{code:handleTasks}
-In short, we use the created and updated tasks returned by SynchronizeAssignmentTasks.
-For every group repository in a course, we then create issues or update issues accordingly.
-Any task that has been marked as deleted, will trigger the updateIssues function to close the issue.
+Instead of deleting issues, they are closed, and their title and body are inserted with a statement indicating that the associated task has been deleted.
 
-\section{Tests}
+The entire process of synchronizing issues happens on line 16 to 31 in handleTasks \ref{code:handleTasks}.
+In short, we use the created and updated tasks returned by SynchronizeAssignmentTasks, as arguments in createIssues and updateIssues respectively.
+These functions use the SCM functions described in section \ref{sec:scm_expansion}.
+Then, by looping through every course group repository we create and update GitHub issues accordingly.
+createIssues also returns a list of all the issues it created.
+These are used at the end of the process to create issue database records.
 
-Maybe maybe
+It is worth mentioning that we did not discuss how we delete GitHub issues in the above process.
+To delete issues, we wanted to expand on the SCM API to give it that capacity.
+It turns out however, that GitHub's REST API does not support deleting issues.
+An alternative could be to use GraphQL, a query language for API's, but instead we went for a simpler solution.
+Instead of deleting issues, they are closed, and their title and body are inserted with a statement indicating that the associated task has been deleted.
+
+% In pr chapter, need to discuss if QF should create PR's or students
