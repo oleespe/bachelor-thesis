@@ -74,6 +74,43 @@ Storing tasks also allows us to easily handle late enrolling groups, as we can u
 
 To edit issues, we will also need to internally store a reference to them in the database.
 
+% To support pull requests, we need to expand
+
+\section{Desired workflow}
+% TODO: This part belongs in the introduction to the implementation chapter
+This section describes in detail the desired student and teacher workflow, and is in essence what we want to achieve with this project.
+
+Tasks will be handled as described in the previous section.
+They are created by the teacher as markdown files within an assignment, and QuickFeed creates issues based on them.
+When a student wants to complete any task, they create a new branch on their local repository.
+Using this branch, they create a pull request on their student repository which is linked to the associated issue.
+
+At this stage, a student has an open pull request on their repository.
+Tests are run on the student code by QuickFeed, and students receive feedback on these tests in the pull request itself.
+
+When students are finished with a task, i.e., they receive a passing score from the test results, their code is ready to be reviewed.
+At this point, QuickFeed should automatically assign one student and teacher reviewer.
+They will comment on the students code, request changes and so on.
+When all changes are implemented, the teacher approves the pull request, allowing the student to merge it.
+Finally, when all tasks have gone through this process, the assignment itself can be set as approved.
+
+\section{Existing Approach}
+
+An implementation for this project has already been attempted by Adil Khurshid. % TODO: Ref
+This section discusses the approach he used.
+
+In short, he proposed implementing support for the following features.
+When a teacher creates an assignment, they have the option of creating any number of task markdown files.
+For each of these markdown files, a single issue should be created on every student repository.
+The title and body of these issues are defined by the contents of the corresponding task.
+When a student wants to complete a task, they create a pull request for the associated issue.
+After the deadline of the assignment has passed, QuickFeed randomly assigns co-student and teacher reviewers to the pull request. 
+Only when the pull request has been approved by a teacher, should it be merged.
+
+Adil discusses several challenges to this approach, and gives his proposed solutions.
+Given that he did not finish his work however, many of these solutions have later proved inadequate or faulty, and in some cases potentially too complex.
+In general, this thesis is independent of the aforementioned approach.
+
 \subsection{Pull Requests}
 
 The following questions are relevant for both this and the implementation part.
@@ -86,7 +123,3 @@ How do we ensure that reviewers are evenly distributed?
 How do we ensure that reviewers are not assigned to their own repository?
 What if a student pushes from a local branch that differs from a remote one?
 What if an assignment is manually graded?
-
-% To support pull requests, we need to expand
-
-\subsection{Workflows}

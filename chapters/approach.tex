@@ -2,123 +2,140 @@
 
 \chapter{Approach}
 \label{ch:approach}
-% TODO: Revise
-In this chapter we discuss how this project was approached.
 
-Though the project itself is fairly straight forward, how to approach it became quite challenging.
-Planning out how to implement the desired features in a good and approachable manner, would prove highly time consuming and hard.
-Even the desired features themselves were hard enough to conceptualise.
-A problem that was not helped by the fact that there was no clear single source of information to describe them.
-As a consequence, the approach to this project was always changing, as new desires and ideas were discussed.
-
-In this chapter we discuss this ever changing approach.
-How it started as a continuation of previous approaches and a desired workflow.
-And how it eventually was altered to combat numerous challenges and issues that were faced.
- 
-\section{Existing Approach}
-% TODO: Replace this with overview chapter on individual implementation sections
-An implementation for this project has already been attempted by Adil Khurshid. % TODO: Ref
-This section discusses the approach he used.
-
-In short, he proposed implementing support for the following features.
-When a teacher creates an assignment, they have the option of creating any number of task markdown files.
-For each of these markdown files, a single issue should be created on every student repository.
-The title and body of these issues are defined by the contents of the corresponding task.
-When a student wants to complete a task, they create a pull request for the associated issue.
-After the deadline of the assignment has passed, QuickFeed randomly assigns co-student and teacher reviewers to the pull request. 
-Only when the pull request has been approved by a teacher, should it be merged.
-
-Adil discusses several challenges to this approach, and gives his proposed solutions.
-Given that he did not finish his work however, many of these solutions have later proved inadequate or faulty, and in some cases potentially too complex.
-In general, this thesis is independent of the aforementioned approach.
-
-\section{Desired workflow}
-
-This section describes in detail the desired student and teacher workflow, and is in essence what we want to achieve with this project.
-
-Tasks will be handled as described in the previous section.
-They are created by the teacher as markdown files within an assignment, and QuickFeed creates issues based on them.
-When a student wants to complete any task, they create a new branch on their local repository.
-Using this branch, they create a pull request on their student repository which is linked to the associated issue.
-
-At this stage, a student has an open pull request on their repository.
-Tests are run on the student code by QuickFeed, and students receive feedback on these tests in the pull request itself.
-
-When students are finished with a task, i.e., they receive a passing score from the test results, their code is ready to be reviewed.
-At this point, QuickFeed should automatically assign one student and teacher reviewer.
-They will comment on the students code, request changes and so on.
-When all changes are implemented, the teacher approves the pull request, allowing the student to merge it.
-Finally, when all tasks have gone through this process, the assignment itself can be set as approved.
+Before we can start implementing anything, there are a few lingering design choices we have to make.
+In this chapter we discuss and analyse these, and try to give a rationale for why we made the choices that we did.
 
 \section{Access to Student Repositories}
 
-In the previous section we described what we want to achieve.
-Beginning with this section, we start discussing some initial challenges.
+Since students do not have access to other students' repositories, they have no easy way of accessing their code.
+This becomes a necessity when want to do co-student code review, as they must somehow be given access to the relevant pull request.
+In this section we discuss possible solutions to overcome this problem.
 
-\subsection{The Problem}
+\subsection{Possible Solutions}
 
-In order for one student to review the pull request of another, they will have to be given access to it.
+A solution could be to use GitHub teams, a feature that would allow us to grant limited access to individual repositories.
+When a student is assigned to review someone else's pull request, such a team can be created with read rights to the relevant repository.
+Once the review is finished, we can either remove the team from the repository, remove the student from the team, or just delete the team altogether.
+This solution does however have some unwanted side effects, which can be illustrated with the following scenario.
 
-A solution could be to use GitHub teams to grant students review access to other repositories.
-Access can then be removed once the review process is finished.
-This solution does however lead to possible complications.
-First of all, students having access to another random student's repository can be somewhat invasive.
-Secondly it can lead to the following possible scenario:
+Imagine we have two students: A and B.
+Student A is finished with a task from assignment1, and therefore gets a reviewer assigned.
+Student B is assigned to review it, and is granted access by QuickFeed to student A's repository.
+Student A is also diligent, and has already started working on assignment2.
+In fact, student A has nearly completed assignment2.
+Student B however, has not even started on assignment2, but because they can now access student A's assignments, they see how he/she did it.
 
-Imagine we have two students: Student-1 and Student-2.
-Student-2 is finished with a task from assignment1, and therefore gets a reviewer assigned.
-Student-1 is assigned to review it, and is granted access by QuickFeed to Student-2's repository.
-Student-2 is also diligent, and has already started working on assignment2.
-In fact, Student-2 has nearly completed assignment2.
-Student-1 however, has not even started on assignment2, but because they can now access Student-2's assignments, they receive valuable knowledge on how to solve it.
-Of course, this would be highly problematic to any teacher wanting their students to solve assignments independently.
+As a consequence, using GitHub teams would mean that assignments can only be published after the deadline of the previous one is passed.
+A prospect that would probably not be appealing to most teachers.
 
-To avoid this problem, a possible solution is to create a clone repository, containing only the assignment that is to be reviewed. 
-This way, any reviewing student will only have access to the assignment in question, and not the rest of that students repository.
+Another possible solution is to create a clone repository, containing only the relevant assignment. 
+This way, any reviewing student will only have access to the assignment in question.
+QuickFeed would create these repositories when needed, and then delete them once the review is complete.
 
-% TODO: Revise this example.
 Implementing this however seems highly complex, as there is a myriad of complications and problems that will have to be accounted for.
-For one, if an assignment contains for example 6 tasks, it would mean that 6 copy repositories will have to be created and managed by QuickFeed for each student.
-If a course has 50 enrolled students, 300 new repositories will then have to be created, for just that one assignment.
-Obviously this is not a feasible way to tackle this issue.
-
-Even if we manage to reduce the number of such repositories that need to be created, there is still the problem of how to manage them.
-An implementation needs to handle, amongst other things, the following:
+For one, QuickFeed must be expanded to handle, amongst other things, the following.
 
 \begin{itemize}
-    \item How to create new review repositories containing only the code that is relevant.
-    \item How to delete them when they are no longer needed.
-    \item How to associate actions between a review repository and the original student repository.
-          E.g. if code is updated in the original, should it then also be updated in the other?
-          And if so, how do we accomplish this?
-    \item How to manage pull requests in two different repositories.
+    \item Creating clone repositories containing only the assignment that is relevant, and the accompanying pull request.
+    \item Deleting these repositories when they are no longer needed.
+    \item Associating actions on the original repository, with the new one.
+    I.e. we must make sure that any relevant additions are transparent in both
+    \item Account for all possible complications that may occur.
 \end{itemize}
 
+An implementation like this also assumes that only one review is required per assignment, when there could in fact be several.
+If for example an assignment has three tasks, and therefore three related pull requests, how do we then create these clone repositories?
+Would we create one per pull request?
+This seems like a terrible approach, as the number of repositories created would me enormous in courses with many students and assignments.
+
 Let us say that we, despite these challenges, managed to create a fully functional implementation of the above solution.
-We now have to cope with the prospect that we have further complexified the user experience.
-Students having to learn GitHub pull requests may be problematic enough on its own, but also introducing them to review repositories could prove counter-productive.
+We now have to cope with the prospect of having further complexified the user experience.
+Possibly so much so that the entire solution might be counter-productive.
 
 \subsection{Limiting Scope to Group Repositories}
 
-The two solutions proposed in the previous section both seem suboptimal.
-Though they are possible to implement, doing so in a functional manner seems difficult and time consuming.
+The two solutions proposed in the previous section either seem too complex, or somewhat suboptimal.
 Instead of going through with one of them, a compromise was agreed on to limit the project scope to only group assignments.
+This means that instead of students reviewing each other's code on regular assignments, they will only do so on group assignments.
+Furthermore, students will also only review other group members' code.
 
-Instead of students reviewing each other's code on regular assignments, they will only do so on group assignments.
-Furthermore, students will only review other group members' code.
 As an example, we can imagine a group assignment with three different tasks.
 A group of three students will create a pull request each to solve these tasks.
-They are then each assigned, when appropriate, to review one of the other group members' pull request
+They are then each assigned, when appropriate, to review one of the other group members' pull request.
 
 The benefit of this approach is that it avoids students needing access to other repositories all together.
 We only need to manage student review within a local group scope, and not for an entire course.
 
+One disadvantage is that teachers will have to more carefully plan out the tasks they create.
+Say we have a group of four members, and a group repository with only three issues.
+One of the issues will have to be shared by two of the group members.
+If every issue is equally challenging to solve, it would put the other two members at a disadvantage.
+It seems then that teachers should only create as many tasks as there are designated group members, or at least a multiple of that number.
+
+Another consideration teachers will have to account for, is that they have to create tasks that are independent of each other.
+If task A is dependent on task B being complete, a consequence would be group members potentially having to wait for each other.
+
+\section{Creating Pull Requests}
+
+Having limited our approach to only group assignments in the previous section, we continue by discussing how to create the pull requests themselves.
+
+There are two viable options, both with their own set of advantages and disadvantages.
+Option one is to have students create the pull requests.
+As issues are created on their group repository, the group members can internally decide who solves what issue.
+Option two is having QuickFeed create the individual pull requests when tasks are created.
+
+\subsection{Manual Creation}
+
+An advantage of letting students manually create the pull requests, is that group members can self organize on who does what.
+If a group member thinks a certain issue looks more interesting than the others, they can explicitly communicate this with the rest of the group.
+
+Manually creating a pull request also allow us to restore a working state, in case a student incorrectly merges it.
+This could happen if the pull request has not been approved by a teacher.
+The same process we use internally to create the pull request, can be used again to recreate it.
+This approach is described in more depth in section. % TODO: Ref to PR creation part.
+
+The major disadvantage to relying on students to create the pull requests, is the increased complexity that comes with it.
+Students will have to learn how to create and merge them correctly, and when to do so.
+If a student messes up, they must know how to fix any potential complications.
+And if they do not, the teaching staff must have the capacity to assist them.
+
+\subsection{Automatic Creation}
+
+The clear advantage to having QuickFeed automatically create pull requests, is that we do not make the process more complex for students.
+If the students are not involved, there is no opportunity for them to mess up.
+This also alleviates the teachers, as they no longer need to assist in case something goes wrong.
+
+There is however a disadvantage to this approach.
+Given that QuickFeed relies on communication with GitHub by being an OAuth app, each pull request would have to be made in a students name.
+This gives rise to several problems.
+How do we decide what group member to use when creating a pull request?
+If the number of issues in a repository does not align with the number of group members, what should happen?
+
+Even if we overcome these problems, we are left with the fact that individual group members can no longer self organize when solving issues.
+It seems then that any solution must create "anonymous" pull requests, that are not directly assigned to any student.
+There are however drawbacks to this approach as well.
+To facilitate student co-review, we must have a reference to the student who "checked out" the pull request.
+If we do not, we will have no way of knowing from which pool of group members to select a reviewer.
+This is given the fact that a student should not be assigned to review their own pull request.
+
+\subsection{Conclusion}
+
+While a fully functional automatic pull request creation process seems ideal, it would be difficult to implement.
+We therefore decided to instead go for the first approach, as its disadvantages seem overcomeable and manageable.
+It also seems far easier to implement.
+
+It is worth noting that these two approaches are not mutually exclusive, and QuickFeed could support both solutions at the same time.
+In fact, the initial idea was to implement them both, and thus getting all their benefits.
+However, when doing further research, the problem of having to create pull requests in a students name seemed annoying to overcome.
+
 \section{Automated Student Feedback}
 
 The initial idea was to use workflows.
-Does not seem possible using GitHub workflows. 
+Does not seem possible using GitHub workflows.
 Seems like we must find an alternative solution.
 Also what should this feedback consist of?
+Should also talk about workflows not being ideal in the first place, since students need .yml files on their repository and so on.
 
 \subsection{GitHub Checks API}
 

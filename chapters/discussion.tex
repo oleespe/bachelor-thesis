@@ -3,11 +3,22 @@
 \chapter{Discussion}
 \label{ch:discussion}
 
-\subsection{Future Work}
+\section{Future Work}
 
-Checks API
+\subsection{Checks API}
 
+\subsection{Expanding Approval Process}
 Pull requests can be approved. This has no impact on the assignment approval process. Can expand on it.
+
+\subsection{GitHub App}
+\label{section:github-app}
+
+QF should probably be a GitHub app instead of Oauth app
+Oauth app acts on behalf of a user, while app uses its own identity.
+For example, with an Oauth app we cannot create pull requests and comments as QF, only as an authorized user in that org.
+Also required for Checks API.
+https://docs.github.com/en/developers/apps/getting-started-with-apps/differences-between-github-apps-and-oauth-apps
+https://docs.github.com/en/developers/apps/getting-started-with-apps/about-apps
 
 \subsection{Instructions}
 
