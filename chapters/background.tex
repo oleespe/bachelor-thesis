@@ -7,7 +7,8 @@ In this chapter we describe existing technology and concepts that will be referr
 
 \section{GitHub}
 
-In this section we explore features of GitHub that are relevant to this thesis.
+QuickFeed already relies on GitHub to manage assignments and student code.
+This section looks at certain GitHub features that we want QuickFeed to support.
 
 \subsection{Issues}
 
@@ -52,30 +53,60 @@ Through its features, GitHub pull requests provide an efficient and manageable w
 Maybe maybe
 
 \section{QuickFeed}
-% TODO: Revise
+
 QuickFeed provides two primary features.
-A web interface and a backend that tests, scores and grades student submitted code.
+A web interface that allows students to enroll in courses, create groups and receive feedback on their submissions.
+And a backend that tests, scores and grades student submitted code.
+The backend is primarily implemented with the Go programming language, while the frontend uses TypeScript and the React library.
+For data storage, QuickFeed relies on an SqLite-database, managed using the the GORM library.
 
-The web interface is implemented with the Typescript programming language, using the React library.
-It is used by students to enroll in a course, create groups and receive feedback on their code.
-Teachers can use it to create and manage courses.
-
-The backend is primarily implemented using the Go programming language, and is divided into different modules, each with its own set of functionality.
-It also features an SqLite-database, implemented with the GORM library.
-
-In this section we give a description of some of QuickFeed's features that are important in this project.
+In this section we give a description of some of the processes and features QuickFeed supports.
 
 \subsection{Protocol Buffers}
-% TODO: Revise
+
 Protocol buffers is a language-neutral mechanism for serializing structured data. % (ref: https://developers.google.com/protocol-buffers)
 It is often abbreviated as protobuf, and is used to define messages in a \textit{.proto} file.
 When the file is compiled, data structures and methods for the desired language are generated in a separate file.
-
-QuickFeed uses this method to generate the basis of nearly all its data structures, which are then stored in its internal database.
+QuickFeed uses protobuf to generate most of its data structures.
+These are then stored in its internal database when necessary.
 
 \lstinputlisting[caption={Repository message}, firstline=90, lastline=107]{code/ag.proto}
 
-When compiled, this message generates the Repository data structure, which in turn is used to represent any QuickFeed managed repository.
+When compiled, the above message generates the \textit{Repository} data structure, which in turn is used by QuickFeed to represent repositories.
+
+It should be noted that QuickFeed also uses these messages in conjunction with gRPC to facilitate server-client communication.
+This part is however not relevant for this project.
+
+\subsection{Webhooks}
+
+QuickFeed communicates with GitHub in two ways.
+In this section we will detail one of them, namely webhooks.
+
+A webhook is a "user-defined callback over HTTP". % (ref: (09.04) https://developer.atlassian.com/server/jira/platform/webhooks/)
+In general, webhooks allow developers to listen to events from any supporting sites.
+When any such event occurs, an HTTP request is sent to the address configured for the webhook.
+The request contains data about the event, usually in a JSON format.
+
+QuickFeed uses webhooks to retrieve data from push events on a course.
+When a new course is created, QuickFeed creates a webhook on the GitHub organization of the given course.
+This webhook is only triggered by push events, which are then handled by QuickFeed accordingly:
+
+\begin{itemize}
+    \item If the push event is to the tests repository, QuickFeed will update the course assignments.
+    \item If the push event is to a student repository, QuickFeed will determine the assignments that have been changed/worked on, 
+    and run the assignment tests on them.
+\end{itemize}
+
+\subsection{SCM API}
+% TODO: Should say that QF authenticates with the GitHub API by being an Oath app.
+The second way QuickFeed communicates with GitHub is through a custom API.
+
+To facilitate communication with potentially any source control management system, a custom SCM API has been developed for QuickFeed.
+The current iteration of QuickFeed supports interacting with GitHub through this API, via the go-github library. % (ref: go-github)
+The library itself, communicates with GitHub's own REST API using HTTP requests.
+
+The SCM API allows QuickFeed to perform various tasks, such as creating/updating repositories, creating webhooks, managing teams and more.
+It, together with webhooks, form a 2-way communication stream between QuickFeed and GitHub.
 
 \subsection{QuickFeed Repository Structure}
 \label{sec:quickfeed-repository-structure}
@@ -86,6 +117,7 @@ They are all described as follows.
 
 \textit{info}: This repository simply holds information about a course.
 The repository is available for all students, and would typically work as a simple information hub.
+It is created and managed by the teaching staff.
 
 \textit{assignments}: The repository responsible for presenting the assignments to students.
 Every assignment in a course is represented as a folder within this repository.
@@ -96,7 +128,7 @@ The repository differs from \textit{assignments}, because every assignment folde
 In addition, the repository can contain a \textit{scripts} folder, containing a \textit{run.sh} file and a Dockerfile.
 
 The \textit{assignment.yml} file is used by teachers to specify assignment specific settings.
-As an example, it can contain information on the assignment deadline, whether it is manually graded, and more.
+As an example, it can contain information about the assignment deadline, whether it is manually graded, and more.
 
 The \textit{run.sh} file contains the script used by QuickFeed when testing student code.
 As explained, it is contained within the \textit{scripts} folder, but can also be located within the specific assignments themselves.
@@ -104,8 +136,6 @@ When running tests on an assignment, QuickFeed will prioritize using any assignm
 
 Finally, the Dockerfile contained within \textit{scripts} is used to create a docker image.
 Within this image, QuickFeed runs the appropriate script, derived from \textit{run.sh}.
-% TODO: Maybe explain more of this process? How these scripts usually work, i.e. they pull the student code and assignment code, and then run go test -v.
-% And also how the scores package is involved. Should probably be in a separate section.
 
 Being a repository that is used and managed solely by the teaching staff, it follows that students do not have access to its contents.
 
@@ -134,46 +164,14 @@ These repositories are the ones students push their code to as they work on assi
     \label{fig:qf-repository-structure}
 \end{figure}
 
-\subsection{Assignment Submission Process}
+\subsection{TITLE HERE}
 
-To fully understand how a standard assignment submission process usually goes, we will detail it in this section.
+So far we have mentioned that students push code to their respective GitHub repositories, and that QuickFeed will run assignment specific tests on this code as this happens.
 
-As teachers push their assignments to the \textit{assignments} repository, students will pull it to their own local repositories.
-When students feel compelled, they push their source code to their respective GitHub repository.
-This triggers QuickFeed to run the tests that are defined for that assignment in the \textit{tests} repository.
-Students can then view the results of these tests through QuickFeed's web based user interface.  
-This allows students to see which parts of their code failed, if any.
 
-If an assignment is automatically graded, they will receive a passing grade once enough tests pass.
-If it is instead set to be manually graded, a teacher must at some point explicitly approve the assignment.
+How QuickFeed tests code.
+What do the teachers need to do.
 
-\subsection{Webhooks}
-
-QuickFeed communicates with GitHub in two ways.
-In this section we will detail one of them, namely webhooks.
-
-A webhook is a "user-defined callback over HTTP". % (ref: (09.04) https://developer.atlassian.com/server/jira/platform/webhooks/)
-In general, webhooks allow developers to listen to events from any supporting sites.
-When any such event occurs, an HTTP request is sent to the address configured for the webhook.
-The request contains data about the event, usually in a JSON format.
-
-QuickFeed uses webhooks to retrieve data from push events on a course.
-When a new course is created, QuickFeed creates a webhook on the GitHub organization of the given course.
-This webhook is only triggered by push events, which are then handled by QuickFeed accordingly:
-
-\begin{itemize}
-    \item If the push event is to the tests repository, QuickFeed will update the course assignments.
-    \item If the push event is to a student repository, QuickFeed will determine the assignments that have been changed/worked on, 
-    and run the assignment tests on them.
-\end{itemize}
-
-\subsection{SCM API}
-% TODO: Should say that QF authenticates with the GitHub API by being a Oath app.
-The second way QuickFeed communicates with GitHub is through a custom API.
-
-To facilitate communication with potentially any source control management system, a custom SCM API has been developed for QuickFeed.
-The current iteration of QuickFeed supports interacting with GitHub through this API, via the go-github library. % (ref: go-github)
-The library itself, communicates with GitHub's own REST API using HTTP requests.
-
-The SCM API allows QuickFeed to perform various tasks, such as creating/updating repositories, creating webhooks, managing teams and more.
-It, together with webhooks, form a 2-way communication stream between QuickFeed and GitHub.
+need:
+score package
+ci package

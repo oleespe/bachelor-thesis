@@ -3,11 +3,41 @@
 \chapter{Implementation}
 \label{ch:implementation}
 
+\section{Introduction}
+
 Text text
+
+\subsection{Feature Overview}
+
+To fully grasp what we need to implement, this section describes all the features we want to have QuickFeed support.
+
+\textbf{Tasks and issues}
+
+First of all we want QuickFeed to support teachers creating task markdown files within individual assignments.
+As these are created and pushed to \textit{tests}, QuickFeed should create GitHub issues based on their contents in all group repositories.
+Furthermore, when these task files are updated or deleted, their changes should be reflected in their respective issues.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[scale=0.8]{photos/tests-repository-structure-tasks.PNG}
+    \caption{Example of a tests repository with tasks}
+    \label{fig:tests-repository-structure-tasks}
+\end{figure}
+
+\textbf{Pull Requests}
+
+For every issue, group members are expected to solve them by creating a new branch and pull request.
+QuickFeed should then support...
+\begin{itemize}
+    \item Returning automatic feedback every time a student pushes to a pull request.
+    \item Automatically assigning appropriate reviewers when students get a passing score on their code.
+    I.e. one teacher and one other group member.
+    \item Correctly closing the pull request when a teacher approves it.
+\end{itemize}
 
 \section{Existing implementation}
 
-As we have already mentioned, an implementation has already been attempted for this project.
+An implementation has already been attempted for this project. % TODO: Ref here, and mention both names.
 Before we can begin with a new one, we first have to decide which parts of it we want to use, and which to discard.
 These parts are summarized in this section.
 
@@ -58,23 +88,6 @@ Having looked at what existing code we decided to keep, we continue by exploring
 Moving forward in this chapter, we make the following distinction between found tasks/assignments, and existing tasks/assignments.
 Found tasks and assignments are data objects created from the contents found within the \textit{tests} repository.
 Existing tasks and assignments are data-objects based on data records that we retrieve from the database.
-
-\subsection{Overview}
-
-This section gives an overview of the features QuickFeed will support through this implementation.
-
-Teachers can now create \textit{task-*.md} files inside individual assignments in \textit{tests}, as illustrated below.
-
-\begin{figure}[ht]
-    \centering
-    \includegraphics[scale=0.8]{photos/tests-repository-structure-tasks.PNG}
-    \caption{Example of a tests repository with tasks}
-    \label{fig:tests-repository-structure-tasks}
-\end{figure}
-
-When they are pushed to GitHub, an issue is created on every group repository to represent them.
-When teachers changes a task, either by editing it or deleting it, these changes are reflected on their associated issues.
-I.e. every issue is in sync with the task that created it.
 
 \subsection{Data Structures}
 

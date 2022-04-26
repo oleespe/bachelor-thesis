@@ -6,7 +6,7 @@
 Before we can start implementing anything, there are a few lingering design choices we have to make.
 In this chapter we discuss and analyse these, and try to give a rationale for why we made the choices that we did.
 
-\section{Access to Student Repositories}
+\section{Student Repository Access}
 
 Since students do not have access to other students' repositories, they have no easy way of accessing their code.
 This becomes a necessity when want to do co-student code review, as they must somehow be given access to the relevant pull request.
@@ -107,38 +107,76 @@ If the students are not involved, there is no opportunity for them to mess up.
 This also alleviates the teachers, as they no longer need to assist in case something goes wrong.
 
 There is however a disadvantage to this approach.
-Given that QuickFeed relies on communication with GitHub by being an OAuth app, each pull request would have to be made in a students name.
-This gives rise to several problems.
-How do we decide what group member to use when creating a pull request?
+Given that QuickFeed relies on authenticating with GitHub using users specific access tokens, each pull request would have to be made either in a student or teacher's name.
+Both of these options seem suboptimal.
+Creating them as teachers seems illogical, as one teacher will then be the owner of a huge number of pull requests they do not interact with.
+If we create them as students, we could do so for each individual group member.
+This still leaves us with the issue of having to decide what group member to use when creating the pull request
 If the number of issues in a repository does not align with the number of group members, what should happen?
+Even if we solve these problems, we are still left with the fact that individual group members can no longer self organize when assigning issues.
 
-Even if we overcome these problems, we are left with the fact that individual group members can no longer self organize when solving issues.
-It seems then that any solution must create "anonymous" pull requests, that are not directly assigned to any student.
+It seems then that any solution must create "anonymous" pull requests, i.e pull requests that are not directly assigned to any student or teacher.
+One way to do this could be to have a QuickFeed bot account.
+This bot account would then be the user used to create all required pull requests 
 There are however drawbacks to this approach as well.
 To facilitate student co-review, we must have a reference to the student who "checked out" the pull request.
-If we do not, we will have no way of knowing from which pool of group members to select a reviewer.
+If we do not, we will have no way of knowing from which pool of group members to select a reviewer later on.
 This is given the fact that a student should not be assigned to review their own pull request.
 
 \subsection{Conclusion}
 
-While a fully functional automatic pull request creation process seems ideal, it would be difficult to implement.
-We therefore decided to instead go for the first approach, as its disadvantages seem overcomeable and manageable.
-It also seems far easier to implement.
+While option two seems ideal, there are a few key points that made us instead go with option one.
+First of all, the current iteration of QuickFeed does not seem to fully support it, as we have no direct way to create anonymous pull requests.
+Secondly, option one gives us a greater capacity to handle students incorrectly mergeing pull requests.
 
 It is worth noting that these two approaches are not mutually exclusive, and QuickFeed could support both solutions at the same time.
 In fact, the initial idea was to implement them both, and thus getting all their benefits.
-However, when doing further research, the problem of having to create pull requests in a students name seemed annoying to overcome.
+
+\section{Issue Creation}
+
+The previous discussion highlights another problem that has to be taken into consideration, and regards how we create issues.
+
+As mentioned, for every task, an issue should be created on all group repositories in a course.
+To create these issues, we will have to use the GitHub API.
+And again, given that GitHub authenticates on a per user basis, these issues must be created in the name of either a student or teacher.
+
+Like with the pull request problem, creating them as a teacher seems wrong.
+However, creating issues as a student does not seem that problematic.
+Within a group, we could simply have the first student in the group be the creator.
+And unlike the pull request problem, where ownership was highly relevant, it does not matter, given our context, who is assigned as an issue owner.
+The issues only serve as a source of information, and the only interaction we have with them is to create pull requests linked to them.
 
 \section{Automated Student Feedback}
 
-The initial idea was to use workflows.
-Does not seem possible using GitHub workflows.
-Seems like we must find an alternative solution.
-Also what should this feedback consist of?
-Should also talk about workflows not being ideal in the first place, since students need .yml files on their repository and so on.
+To facilitate automatic feedback on individual pull requests, the initial idea was to use GitHub workflows.
+This was mainly due to the fact that workflows are already tightly integrated into the GitHub pull request user interface.
+As students work on tasks, we imagined using workflows to display their received score, and potentially the test results themselves.
+
+However, as we researched ways to implement this, it became apparent that workflows were not an optimal approach.
+For one, to have GitHub register a workflow, a \textit{.yml} file describing it must be present on the repository.
+These files would have to be created and pushed to \textit{tests}, and then pulled by every student.
+The biggest problem however, is that GitHub does not support triggering workflows manually via API, and having them appear in a pull request.
+Meaning that we can trigger workflows remotely, but they cannot be displayed within a pull request on the same trigger.
+
+As a consequence we have to find potential alternate solutions.
+These are discussed in detail in the following sections.
 
 \subsection{GitHub Checks API}
 
+Only works with GitHub apps.
+
 \subsection{Pull request comments}
 
+Seems like a bot account or something would be needed otherwise.
+Can create the comments in each students name.
+
 \subsection{Commit Status API}
+
+\section{Feedback content}
+
+Also what should this feedback consist of? Can look at the type of automatic feedback they receive in web interface.
+
+\section{GitHub App}
+
+Should discuss the need to be able identify as QuickFeed when performing many of the actions needed in the implementation.
+These include creating issues, creating pull requests and if 
