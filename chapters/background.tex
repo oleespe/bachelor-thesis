@@ -78,6 +78,7 @@ It should be noted that QuickFeed also uses these messages in conjunction with g
 This part is however not relevant for this project.
 
 \subsection{Webhooks}
+\label{sec:webhooks}
 
 QuickFeed communicates with GitHub in two ways.
 In this section we will detail one of them, namely webhooks.
@@ -96,6 +97,8 @@ This webhook is only triggered by push events, which are then handled by QuickFe
     \item If the push event is to a student repository, QuickFeed will determine the assignments that have been changed/worked on, 
     and run the assignment tests on them.
 \end{itemize}
+
+% TODO: Should also maybe mention the payload that is sent.
 
 \subsection{SCM API}
 % TODO: Should say that QF authenticates with the GitHub API by being an Oath app.
@@ -164,14 +167,31 @@ These repositories are the ones students push their code to as they work on assi
     \label{fig:qf-repository-structure}
 \end{figure}
 
-\subsection{TITLE HERE}
+\subsection{The Score Package}
+
+QuickFeed's score package allows for scoring student submitted code.
+Every time a student pushes code to their repository, QuickFeed will run tests on the code, and generate a total score ranging from 0 to 100.
+In this section we describe the parts of this package that are relevant for this thesis.
+
+When teachers develop assignments, they also create tests that are supposed to test student code.
+As part of the score package, teachers can specify for individual tests, how much score they should give, and how that score is gained.
+For example, a test can loop through several test conditions, and then decrement the score every time it fails.
+These tests have to be explicitly added by teachers using either Add or AddSub, both of which are functions defined in the package.
+Doing so, they are added to the pool of all tests that constitute an assignment.
+A total score is then generated on the server side by adding up the score from all added tests.
+This process is further explored in the next section.
+
+\subsection{Testing Assignments}
 
 So far we have mentioned that students push code to their respective GitHub repositories, and that QuickFeed will run assignment specific tests on this code as this happens.
+In this section we further explain the parts of this process that are important to this thesis.
 
-
-How QuickFeed tests code.
-What do the teachers need to do.
+The process starts by teachers specifying individual tests an assignments, 
 
 need:
-score package
-ci package
+how teachers add functions as part of an assignment test
+how QF will score based on these assignments
+
+how QF creates a docker container and runs the specific script described in previous section
+how this script file uses arguments to clone user repositories
+QF then extracts the result from the tests run

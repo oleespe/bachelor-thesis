@@ -77,6 +77,7 @@ Another consideration teachers will have to account for, is that they have to cr
 If task A is dependent on task B being complete, a consequence would be group members potentially having to wait for each other.
 
 \section{Creating Pull Requests}
+\label{sec:creating-pull-requests}
 
 Having limited our approach to only group assignments in the previous section, we continue by discussing how to create the pull requests themselves.
 
@@ -93,7 +94,6 @@ If a group member thinks a certain issue looks more interesting than the others,
 Manually creating a pull request also allow us to restore a working state, in case a student incorrectly merges it.
 This could happen if the pull request has not been approved by a teacher.
 The same process we use internally to create the pull request, can be used again to recreate it.
-This approach is described in more depth in section. % TODO: Ref to PR creation part.
 
 The major disadvantage to relying on students to create the pull requests, is the increased complexity that comes with it.
 Students will have to learn how to create and merge them correctly, and when to do so.
@@ -134,41 +134,47 @@ In fact, the initial idea was to implement them both, and thus getting all their
 
 \section{Issue Creation}
 
-The previous discussion highlights another problem that has to be taken into consideration, and regards how we create issues.
+Having discussed our approach on creating pull requests, we continue by exploring a similar problem.
+How do we create issues?
 
-As mentioned, for every task, an issue should be created on all group repositories in a course.
-To create these issues, we will have to use the GitHub API.
+As mentioned previously, we want to create issues on every group repository in a course.
+To create these issues, we must use the GitHub API.
 And again, given that GitHub authenticates on a per user basis, these issues must be created in the name of either a student or teacher.
 
-Like with the pull request problem, creating them as a teacher seems wrong.
-However, creating issues as a student does not seem that problematic.
-Within a group, we could simply have the first student in the group be the creator.
-And unlike the pull request problem, where ownership was highly relevant, it does not matter, given our context, who is assigned as an issue owner.
-The issues only serve as a source of information, and the only interaction we have with them is to create pull requests linked to them.
+Like with the pull request problem, creating them as a teacher seems wrong, however, creating issues as a student does not seem that problematic.
+It does not matter, given our context, who is assigned as an issue owner.
+The issues only serve as a source of information, and the only time students interact with them is when they create pull requests.
+
+A solution could then be to simply have the first student within a group be set as the issue creator.
+Of course, this is a somewhat "hacky" solution, as it makes more logical sense to have QuickFeed assigned as the owner.
+Which again boils down to the fundamental issue on how QuickFeed authenticates with GitHub.
 
 \section{Automated Student Feedback}
 
 To facilitate automatic feedback on individual pull requests, the initial idea was to use GitHub workflows.
 This was mainly due to the fact that workflows are already tightly integrated into the GitHub pull request user interface.
-As students work on tasks, we imagined using workflows to display their received score, and potentially the test results themselves.
 
+As students work on tasks, we imagined using workflows to give feedback based on the tests run on their code. % TODO: Bad sentence
 However, as we researched ways to implement this, it became apparent that workflows were not an optimal approach.
 For one, to have GitHub register a workflow, a \textit{.yml} file describing it must be present on the repository.
 These files would have to be created and pushed to \textit{tests}, and then pulled by every student.
-The biggest problem however, is that GitHub does not support triggering workflows manually via API, and having them appear in a pull request.
-Meaning that we can trigger workflows remotely, but they cannot be displayed within a pull request on the same trigger.
+The biggest problem however, is that GitHub does not support triggering workflows manually via API, and at the same time having them appear in a pull request.
+Meaning that we can trigger workflows remotely, but we cannot have them be displayed within a pull request on the same trigger.
 
 As a consequence we have to find potential alternate solutions.
 These are discussed in detail in the following sections.
 
+\subsection{Pull Request Comments}
+
+Instead of providing automatic feedback via GitHub workflows, we can instead do so by commenting on the pull request itself.
+GitHub's API allows
+
+Can create the comments in each students name.
+Seems like a bot account or something would be needed otherwise.
+
 \subsection{GitHub Checks API}
 
 Only works with GitHub apps.
-
-\subsection{Pull request comments}
-
-Seems like a bot account or something would be needed otherwise.
-Can create the comments in each students name.
 
 \subsection{Commit Status API}
 
