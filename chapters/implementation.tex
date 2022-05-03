@@ -176,11 +176,11 @@ Then, by looping through every course group repository we create and update GitH
 createIssues also returns a list of all the issues it created.
 These are used at the end of the process to create issue database records.
 
-It is worth mentioning that there is no description on how we delete GitHub issues in the above process.
-To delete issues, we wanted to expand on the SCM API to give it that capacity.
+It is worth mentioning that there is no description of how we delete GitHub issues in the above process.
+To delete issues, we wanted to expand the SCM API to give it that capacity.
 It turns out however, that GitHub's REST API does not support deleting issues.
 An alternative could be to use GraphQL, a query language for API's, but instead we went for a simpler solution.
-Instead of deleting issues, they are closed, and their title and body are inserted with a statement indicating that the associated task has been deleted.
+In place of deleting issues, they are closed, and their title and body are inserted with a statement indicating that the associated task has been deleted.
 
 \section{Managing Pull Requests}
 
@@ -189,47 +189,66 @@ Having implemented support for tasks and issues, we must now do the same for pul
 \subsection{Pull Request Data Structure}
 
 To manage pull requests we need a data structure to represent them.
-For this purpose, we create the \textbf{PullRequest} message.
+For this purpose, the \textbf{PullRequest} message is created.
 
 \lstinputlisting[caption={PullRequest message}, firstline=202, lastline=217]{code/ag.proto} % TODO: Need to check for changes when finished
 
 % TODO: Describe this message, and why certain fields are needed.
+% TODO: Describe why linking the issue is important, i.e. we can delete the issue data record, and the issue is closed on GitHub.
 
 \subsection{Creating Pull Requests}
 
 As students create pull requests to solve issues/tasks, we must make sure that a pull request record is created and stored internally to represent them.
 Doing so allows us to keep track of which student is solving what task, who should be assigned to review the pull request, and more.
-This section describes how this was implemented.
+This section describes how this is implemented.
 
 In section \ref{sec:creating-pull-requests} we decided on having students manually create pull requests.
 To accommodate this feature, QuickFeed must react to the pull requests being opened.
-Expanding QuickFeed to also handle pull request related webhooks, allows us to just that.
+Expanding QuickFeed to also handle pull request related webhooks, allows us to do just that.
 
-Specifically, when a pull request is opened we run the handlePullRequestOpened function.
-It will check if a pull request is legitimate, i.e it was created on a group repository and linked to an appropriate issue.
+Specifically, when a pull request is opened the handlePullRequestOpened function is run.
+It will check if a pull request is legitimate, i.e it was created on a group repository and linked to the correct issue.
 If successful, the function creates a new record to represent it, by using the data in the event payload, and then stores it in the database.
 
 Associating a pull request to an issue requires that the student themselves explicitly do so.
 GitHub allows you to link issues to pull requests on their creation, by inserting a reference to them in the pull request body.
-Doing so, we thought that the linked issue would also be part of the webhook payload.
-This turned out to be incorrect, and instead we have to parse the issue number from the pull request body itself.
+Doing so, we thought that the linked issue would also be part of the webhook payload, however, this turned out to be incorrect.
+Instead we have to parse the issue number from the pull request body itself, as shown below.
+% TODO: Should get code from file instead, when everything has been finalized.
+\begin{lstlisting}[caption={The getLinkedIssue function}, language=Golang]
+func getLinkedIssue(body string) (uint64, error) {
+	if count := strings.Count(body, "#"); count != 1 {
+		return 0, errors.New("pull request body does not contain exactly one '#' character")
+	}
+	subStrings := strings.Split(body, "#")
+	issueNumber, err := strconv.Atoi(subStrings[len(subStrings)-1])
+	if err != nil {
+		return 0, fmt.Errorf("failed to parse issue number from pull request body: %w", err)
+	}
+	return uint64(issueNumber), nil
+}
+\end{lstlisting}
+
+This solution somewhat limits the possible contents of a pull request body.
+For example, students must make sure only to use one "\#" character for the function to succeed.
+This is further discussed in section .% TODO: Ref to relevant discussion section.
 
 \subsection{Closing Pull Requests}
 
 When students close and merge pull requests - ideally when they are supposed to - QuickFeed must also act accordingly.
 Again, we use webhooks to listen to pull request closed events, and single out those that are relevant to QuickFeed.
-By relevant we mean events for pull requests that already exist in QuickFeed's database, i.e they were created as part of the process described in the above section.
-We can also filter out events for pull requests that were closed, but not merged.
-This is because students need to merge the pull request into the main branch for QuickFeed to correctly score and grade the assignment as a whole.
-Any non-merged pull request can therefore be ignored.
+Relevant in this context is any event for a pull request that already exist in QuickFeed's database, i.e they were created as part of the process described in the above section.
+Events for pull requests that are closed, but not merged, can also be filtered out, as these constitute an incorrect close.
+If students do happen to close pull requests like this, a working state can be restored by the student simply by reopening it.
+QuickFeed doing nothing in these cases is therefore the simplest solution.
 
-Assuming that the event is valid, we have two possible outcomes.
-Either the pull request is approved, and we can safely delete it and its associated issue from the database.
+Assuming that the event is valid, there are two possible outcomes.
+Either the pull request is approved, and it and its associated issue can safely be deleted from the database.
 Or, it has been closed and merged by a student without being explicitly approved by a teacher.
 If this happens, QuickFeed must have the capacity to restore a working state for the issue/task in question.
-To handle these situations, we only delete the pull request and not the issue record.
+To handle these situations, QuickFeed deletes only the pull request and not the issue record.
 This way, a student doing an incorrect merge can simply reopen the issue that was closed, and then create a new pull request to represent it.
-Thus restoring a working state with little QuickFeed involvement.
+Thereby restoring a working state with little QuickFeed involvement.
 
 \section{Scoring Tasks}
 
@@ -241,20 +260,106 @@ Having it do so on a per task basis therefore seems like a necessity to fulfill 
 
 QuickFeed's ci package is fundamentally designed to test assignments, therefore rewriting it to support tasks would be challenging.
 Any solution might also not be backwards compatible.
-To implement our features though, we do not explicitly need QuickFeed to test task related code, only score it.
+To implement our features though, QuickFeed does not need to test task related code, only score it.
 As such, we can instead complement the score package to support this functionality.
 
+% TODO: Need to describe the following changes further, and use code samples
 Doing so turned out to be pretty straight forward.
-First we changed the score message described in section \ref{sec:the-score-package} to also include a task name field.
-By doing so, we have a direct reference to the task a given score is associated with.
-Furthermore, to support teachers adding task specific tests, we created two new variants of the existing Add and AddSub methods.
-Finally, to generate a total task specific score, we simply sum over the scores that have that task's name.
+First, the score message described in section \ref{sec:the-score-package} is modified to also include a task name field.
+Doing so, gives us a direct reference to the task a given score is associated with.
+Furthermore, to support teachers adding task specific tests, two new variants of the existing Add and AddSub methods are created.
+These allow teachers to specify the task name a test should be a part of.
+Finally, to generate a total task specific score, QuickFeed simply sums over the scores that have that task's name.
 
-With these changes, we can generate a score from 0 - 100 for specific tasks, just as we already can for entire assignments.
+With these changes, we can generate a score from 0 - 100 for specific tasks, just as is already possible for entire assignments.
 
 \section{Manual Feedback}
 
+Having implemented QuickFeed support for scoring tasks in the previous section, these features can now be used to facilitate manual review.
+In short, our approach is to assign one student and teacher reviewer to a pull request once a passing score is reached.
+This passing score limit is the same as the assignment score limit.
+
+Checking whether a task is passed or not must done every time a student pushes to a group repository.
+QuickFeed already has a function that handles these push events, and we can therefore manage all review assignment related logic there.
+
 \subsection{Assigning Reviewers}
+
+To handle pushes to non-default branches in group repositories we implemented the handleTaskPush function.
+Its primary job is to attempt to find a pull request that is associated with a given branch push.
+In the event payload, there is information about both the branch and the repository that was pushed to.
+Using these, QuickFeed queries the database for the specific pull request that is associated with them.
+
+If a pull request exists for the repository and remote branch, it is used to retrieve the task associated with it.
+Doing so allows us to get the specific task name, which can then be used to retrieve the task specific total score.
+Finally, if this score is greater than the score limit, the assignment process can begin.
+
+Before assigning reviewers there are a few things that have to be accounted for.
+First of, we need to make sure not to assign the same reviewers over and over.
+To illustrate, we do not want one teacher to review every pull request in a course, with the rest of the teachers not being assigned to review anything.
+Similarly, having one group member review every pull request within a group is also unwanted.
+Secondly, the owner of a pull request must not be assigned as its reviewer.
+
+To tackle the first problem, we use two maps, one for teachers and one for group members, to facilitate in-memory storage of every reviewer.
+Specifically, these maps track the total amount of times every reviewer has been assigned to a pull request.
+They are described as follows, and are as shown, in fact maps of maps.
+
+\begin{lstlisting}[caption={Maps used to store review counts}, language=Golang, numbers=none]
+teacherReviewCounter[courseID][userID]  = count
+groupReviewCounter[groupID][userID]     = count
+\end{lstlisting}
+
+These are then used as arguments in the in the function getNextReviewer.
+getNextReviewer's purpose is to find, amongst the supplied users, the one that has the least amount of total reviews, and then return said user.
+By supplying it with all course teachers or group member, it finds the next eligible teacher or student reviewer respectively.
+To tackle the second problem mentioned earlier, we make sure to to not include the pull request owner in the user list.
+% TODO: Should get code from file instead, when everything has been finalized.
+\begin{lstlisting}[caption={The getNextReviewer function}, language=Golang]
+func getNextReviewer(ID uint64, users []*pb.User, reviewCounter map[uint64]map[uint64]int) (*pb.User, error) {
+	if len(users) == 0 {
+		return nil, errors.New("list of users is empty")
+	}
+	reviewerMap, ok := reviewCounter[ID]
+	if !ok {
+		// If a map does not exist for a given ID we create it,
+		// and return the first user.
+		reviewCounter[ID] = make(map[uint64]int)
+		reviewCounter[ID][users[0].GetID()] = 1
+		return users[0], nil
+	}
+	userWithLowestCount := users[0]
+	lowestCount := reviewerMap[users[0].GetID()]
+	for _, user := range users {
+		count, ok := reviewerMap[user.GetID()]
+		if !ok {
+			// If the user is not present in the review map,
+			// then they are returned as the next reviewer.
+			reviewerMap[user.GetID()] = 1
+			return user, nil
+		}
+		if count < lowestCount {
+			userWithLowestCount = user
+			lowestCount = count
+		}
+	}
+	reviewerMap[userWithLowestCount.GetID()]++
+	return userWithLowestCount, nil
+}
+\end{lstlisting}
+
+In order to actually assign reviewers to a GitHub pull request, the SCM API is expanded with the function RequestReviewers.
+It is supplied with the GitHub login usernames of the found reviewers.
+If successful, the entire process is finished by updating the pull request stage to \textit{review}, signaling that it is now being reviewed.
+
+\subsection{Approving Pull Requests}
+
+Having described how reviewers are assigned to pull requests in the previous section, this section explores what happens when teachers approve them.
+
+The function handlePullRequestReview handles everything related to pull request reviews.
+It is triggered by pull request review related webhooks, and uses the accompanying payload to find the relevant pull request record.
+If one exists, it attempts to find the user that posted the review.
+The reason why the specific reviewer is needed, is because we must make sure that the review is from an actual teacher.
+Otherwise, the group member that was assigned to review could also internally approve the pull request.
+So, as long as the review is from a teacher, the pull request stage is updated to \textit{approved}, meaning that it can be safely merged.
 
 \section{Automatic Feedback}
 

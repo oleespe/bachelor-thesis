@@ -8,6 +8,21 @@ I.e, there is nothing enforcing a PR review.
 
 What happens if a teacher creates two tasks with the same name?
 
+There is a weakness in how we handle branches.
+If someone pushes to a branch with a remote name that differs from the local name, we cannot know which local branch to check out.
+
+The issue and task related code can easily be extended to also work on all student repositories.
+The pull request part is more hard coded.
+Can discuss any potential expansion to make it also work on regular student repositories.
+
+Can maybe discuss the potential to have a more efficient way of testing things, such as webhook related stuff.
+For example, I am currently hard coded into some of the db population functions, to facilitate testing.
+Would be better if this was more independent. 
+Could maybe have certain QF test GitHub users?
+
+Should discuss that finding the linked issue by parsing the PR body limits what can be in it.
+Can maybe instead be implemented as a regular expression search.
+
 \section{Future Work}
 
 Maybe more feedback if students do something wrong.
