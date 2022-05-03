@@ -152,7 +152,7 @@ Which again boils down to the fundamental issue on how QuickFeed authenticates w
 \section{Automated Student Feedback}
 
 To facilitate automatic feedback on individual pull requests, the initial idea was to use GitHub workflows.
-This was mainly due to the fact that workflows are already tightly integrated into the GitHub pull request user interface.
+Mainly due to the fact that workflows are already tightly integrated into the GitHub pull request user interface.
 
 As students work on tasks, we imagined using workflows to give feedback based on the tests run on their code. % TODO: Bad sentence
 However, as we researched ways to implement this, it became apparent that workflows were not an optimal approach.
@@ -167,19 +167,19 @@ These are discussed in detail in the following sections.
 \subsection{Pull Request Comments}
 
 Instead of providing automatic feedback via GitHub workflows, we can instead do so by commenting on the pull request itself.
-GitHub's API allows
-
-Can create the comments in each students name.
-Seems like a bot account or something would be needed otherwise.
+GitHub's API allows for doing this, again with the caveat that we must comment in a student or teachers name.
+Here, the easiest solution is to simply comment as the student that created the pull request.
 
 \subsection{GitHub Checks API}
 
-Only works with GitHub apps.
+Another interesting option is to use GitHub's Checks API.
 
-\subsection{Commit Status API}
+Cannot use because not GitHub App
+Must explore this further before describing it.
 
 \section{Feedback content}
 
+Not fully implemented yet.
 Also what should this feedback consist of? Can look at the type of automatic feedback they receive in web interface.
 
 \section{GitHub App}

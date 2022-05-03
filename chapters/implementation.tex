@@ -237,20 +237,25 @@ To allow for both automatic and manual feedback, we need a way to score tasks.
 Delivering automatic feedback requires us to do so solely on the tests associated with any given task.
 Manual feedback on the other hand, needs some sort of task related score to determine when to assign reviewers.
 Currently QuickFeed only tests and scores student code based on an assignment as a whole.
-Having it do so also on a per task basis therefore seems like a necessity to fulfill our goals.
+Having it do so on a per task basis therefore seems like a necessity to fulfill our goals.
 
-QuickFeed's ci package is fundamentally designed to test assignments as a whole, therefore rewriting it to support tasks would be challenging.
+QuickFeed's ci package is fundamentally designed to test assignments, therefore rewriting it to support tasks would be challenging.
 Any solution might also not be backwards compatible.
-To support our features though, we do not explicitly need QuickFeed to test task related code, only score it.
+To implement our features though, we do not explicitly need QuickFeed to test task related code, only score it.
 As such, we can instead complement the score package to support this functionality.
 
-\subsection{}
+Doing so turned out to be pretty straight forward.
+First we changed the score message described in section \ref{sec:the-score-package} to also include a task name field.
+By doing so, we have a direct reference to the task a given score is associated with.
+Furthermore, to support teachers adding task specific tests, we created two new variants of the existing Add and AddSub methods.
+Finally, to generate a total task specific score, we simply sum over the scores that have that task's name.
 
-To support scoring tasks, we added support for teachers to explicitly associate test functions with a task name.
-Instead of using Add
+With these changes, we can generate a score from 0 - 100 for specific tasks, just as we already can for entire assignments.
 
 \section{Manual Feedback}
 
 \subsection{Assigning Reviewers}
 
 \section{Automatic Feedback}
+
+Not fully implemented yet.
