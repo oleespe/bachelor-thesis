@@ -194,7 +194,7 @@ Then, for every changed assignment, it will run the tests defined for that assig
 
 Running the tests uses QuickFeed's ci package.
 To set up a test environment, QuickFeed uses the Dockerfile found in \textit{tests} to create a docker container.
-It then continues by running the assignment's script file, as mentioned in section \ref{sec:quickfeed-repository-structure}.
+It then continues by running the assignment's script file, as mentioned in Section \ref{sec:quickfeed-repository-structure}.
 These script files can be assignment specific, but generally they use git clone to merge the students code with the assignment tests, followed up by a command to run all tests.
 The ci package also supports supplying the script with arguments, e.g. to clone the correct student repository.
 
