@@ -70,7 +70,7 @@ In the end, we decided that any attempt to fix the existing logic code would be 
 When a teacher pushes assignments to the \textit{tests} repository, QuickFeed will run the function UpdateFromTestsRepo.
 In short, this function creates a local copy of the folder structure in \textit{tests}, and uses the \textit{assignment.yml} files within to create assignment data objects.
 These are then used to update the database records for the relevant assignments.
-Added as a part of this process, was code to also parse all task markdown files \textit{tests}, and use their contents to create task data objects.
+Added as a part of this process, was code to also parse all task markdown files in \textit{tests}, and use their contents to create task data objects.
 
 Additionally, a new field is created for the existing \textbf{Assignment} message, giving the associated data structure the capacity to hold a list of tasks.
 This is used to have any assignment data object created by UpdateFromTestsRepo also contain all the task data objects for that assignment.
@@ -125,6 +125,7 @@ To avoid confusion, we define the following distinctions for assignments and tas
 \end{itemize}
 
 \subsection{Data Structures}
+\label{sec:tasks-and-issues-data-structures}
 
 To manage tasks and issues, two new messages are defined in the \textit{ag.proto} file: \textbf{Task} and \textbf{Issue}.
 These are used to generate the data structures that are stored in the database.
@@ -269,11 +270,30 @@ In place of deleting issues, they are closed, and their title and body are inser
 Having implemented support for tasks and issues, we must now do the same for pull requests.
 
 \subsection{Pull Request Data Structure}
+\label{sec:pull-request-data-structure}
 
 To manage pull requests we need a data structure to represent them.
 For this purpose, the \textbf{PullRequest} message is created.
 
-\lstinputlisting[caption={PullRequest message}, firstline=202, lastline=217]{code/ag.proto} % TODO: Need to check for changes when finished
+\begin{lstlisting}[caption={PullRequest message}]
+message PullRequest {
+    enum Stage {
+        NONE    = 0;
+        DRAFT   = 1;
+        REVIEW  = 2;
+        APPROVED = 3;
+    }
+    uint64 ID                   = 1;
+    uint64 externalRepositoryID = 2; // Represents the external repository ID
+    uint64 taskID               = 3; // Foreign key
+    uint64 issueID              = 4; // Foreign key
+    uint64 userID               = 5; // The user who owns this PR
+    uint64 commentID            = 6; // GitHub ID of the comment used for automatic feedback
+    string sourceBranch         = 7; // The source branch for this pull request
+    uint64 number               = 8; // Pull request number
+    Stage stage                 = 9;
+}
+\end{lstlisting}
 
 % TODO: Describe this message, and why certain fields are needed.
 % TODO: Describe why linking the issue is important, i.e. we can delete the issue data record, and the issue is closed on GitHub.
@@ -353,7 +373,12 @@ Furthermore, to support teachers adding task specific tests, two new variants of
 These allow teachers to specify the task name a test should be a part of.
 Finally, to generate a task specific total score, QuickFeed simply sums over the scores that have that task's name.
 
-With these changes, we can generate a score from 0 - 100 for specific tasks, just as is already possible for entire assignments.
+It should be noted that when referring to a task name in the context of the score package, we mean the local task name.
+The local task name differs from the regular one by omitting the assignment name prefix.
+As an example, a task with the name \textit{assignment1/hello\_world} will have the local name \textit{hello\_world}.
+This was primarily done to make the process of associating tests and tasks more intuitive for the teachers doing so.
+
+With these changes implemented, we can generate a score from 0 - 100 for specific tasks, just as is already possible for entire assignments.
 
 \section{Manual Feedback}
 
@@ -365,6 +390,7 @@ Checking whether a task is passed or not must be done every time a student pushe
 QuickFeed already has a function that handles these push events, and we can therefore manage all review assignment related logic there.
 
 \subsection{Assigning Reviewers}
+\label{sec:assigning-reviewers}
 
 To handle pushes to non-default branches in group repositories we implemented the handlePullRequestPush function.
 Its primary job is to attempt to find a pull request that is associated with a given branch push.
@@ -392,7 +418,7 @@ groupReviewCounter[groupID][userID]     = count
 
 These are then used as arguments in the function getNextReviewer.
 getNextReviewer's purpose is to find, amongst the supplied users, the one that has the least amount of total reviews, and then return said user.
-By supplying it with all course teachers or group member, it finds the next eligible teacher or student reviewer respectively.
+By supplying it with all course teachers or a group's members, it finds the next eligible teacher or student reviewer respectively.
 To tackle the second problem mentioned earlier, we make sure to to not include the pull request owner in the user list.
 % TODO: Should get code from file instead, when everything has been finalized.
 \begin{lstlisting}[caption={The getNextReviewer function}, language=Golang]
@@ -445,4 +471,78 @@ So, as long as the review is from a teacher, the pull request stage is updated t
 
 \section{Automatic Feedback}
 
-Not fully implemented yet.
+Using QuickFeed's new capacity to score tasks, we implemented support for manual feedback on pull requests.
+This new capacity also allows for automatic feedback on the same pull requests.
+
+The approach is to use a single comment on a student's pull request to automatically publish test results from their latest commit.
+This comment must be updated every time the student pushes to their pull request, and as such we can therefore use the function handlePullRequestPush.
+A function that is used to manage all non-default branch pushes to group repositories, as described in Section \ref{sec:assigning-reviewers}.
+
+\subsection{Formatting the Feedback Comment}
+
+To create the feedback comment itself, we must format one based on the test results for a given push.
+For this purpose, we create the function CreateFeedbackComment.
+
+The general idea is to use the task specific scores, as part of the test results for an assignment, to generate a table.
+For every task specific test, we can describe its received score, the weight of the test, and how much the results from that test counts towards the total score.
+GitHub lets you create tables in comments by using a special string formatting.
+With this in mind, CreateFeedbackComment is described in Code \ref{code:CreateFeedbackComment}.
+
+\begin{lstlisting}[caption={The CreateFeedbackComment function}, label={code:CreateFeedbackComment}, language=Golang]
+func CreateFeedbackComment(results *score.Results, task *pb.Task, assignment *pb.Assignment) string {
+	body := "## Test results from latest push\n"
+	body += "| Test Name | Score | Weight | % of Total |\n"
+	body += "| :-------- | :---- | :----- | ---------: |\n"
+
+	for _, score := range results.Scores {
+		if score.TaskName != task.LocalName() {
+			continue
+		}
+		percentageScore := (float64(score.Score) / float64(score.MaxScore)) * (float64(score.Weight) / results.TotalTaskWeight(task.LocalName()))
+		body += fmt.Sprintf("| %s | %d/%d | %d | %.2f%% |\n", score.TestName, score.Score, score.MaxScore, score.Weight, percentageScore*100)
+	}
+	body += fmt.Sprintf("| **Total** | | | **%d%%** |\n\n", results.TaskSum(task.LocalName()))
+	body += fmt.Sprintf("Once a total score of %d%% is reached, reviewers are automatically assigned.\n", assignment.GetScoreLimit())
+	return body
+}
+\end{lstlisting}
+
+To illustrate, we can supply CreateFeedbackComment with the results, task and assignment described in Code \ref{code:sample-CreateFeedbackComment}.
+\begin{lstlisting}[caption={Example of a CreateFeedbackComment run}, label={code:sample-CreateFeedbackComment}, language=Golang]
+results := &score.Results{
+	Scores: []*score.Score{
+		{TestName: "Test1", TaskName: "1", Score: 5, MaxScore: 7, Weight: 2},
+		{TestName: "Test2", TaskName: "1", Score: 3, MaxScore: 9, Weight: 3},
+		{TestName: "Test3", TaskName: "1", Score: 8, MaxScore: 8, Weight: 5},
+		{TestName: "Test4", TaskName: "1", Score: 2, MaxScore: 5, Weight: 1},
+		{TestName: "Test5", TaskName: "1", Score: 5, MaxScore: 7, Weight: 1},
+		{TestName: "Test6", TaskName: "2", Score: 5, MaxScore: 7, Weight: 1},
+		{TestName: "Test7", TaskName: "3", Score: 5, MaxScore: 7, Weight: 1},
+	},
+}
+CreateFeedbackComment(results, &pb.Task{Name: "lab1/1"}, 
+                        &pb.Assignment{Name: "lab1", ScoreLimit: 80})
+\end{lstlisting}
+
+The resulting comment body in Figure \ref{fig:feedback-comment} is then created.
+Note that the tests with name \textit{Test6} and \textit{Test7} are omitted from the table, because they are not associated with the task supplied to CreateFeedbackComment.
+I.e. they do not have the same name.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=\textwidth]{photos/feedback-comment.PNG}
+    \caption{Feedback comment on a pull request}
+    \label{fig:feedback-comment}
+\end{figure}
+
+\subsection{Publishing Feedback Comments}
+
+To actually publish the feedback comments to a GitHub pull request, we again expand the SCM API.
+The function CreateIssueComment is used to create the comments, while EditIssueComment updates existing ones.
+The reason for using "Issue" in the function names instead of "PullRequest", is because GitHub treats pull requests as issues with code.
+GitHub API calls to comment on issues and pull requests is therefore the same.
+
+The first time a student pushes to a pull request, we use CreateIssueComment to create the initial comment.
+CreateIssueComment returns the ID of the comment that was created, which is then stored as a field on the relevant pull request record.
+Any subsequent pushes to the same pull request will then instead use EditIssueComment, which takes that ID as an argument.
+Doing so, only one comment is present on the student's pull request.
