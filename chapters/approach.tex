@@ -5,6 +5,7 @@
 
 Before we can start implementing anything, there are a few lingering design choices we have to make.
 In this chapter we discuss and analyse these, and try to give a rationale for why we made the choices that we did.
+% TODO: Hein recommends a recap of the goals of the project somewhere here
 
 \section{Student Repository Access}
 
@@ -20,11 +21,11 @@ Once the review is finished, we can either remove the team from the repository, 
 This solution does however have some unwanted side effects, which can be illustrated with the following scenario.
 
 Imagine we have two students: A and B.
-Student A is finished with a task from assignment1, and therefore gets a reviewer assigned.
+Student A is finished with a task from assignment 1, and therefore gets a reviewer assigned.
 Student B is assigned to review it, and is granted access by QuickFeed to student A's repository.
-Student A is also diligent, and has already started working on assignment2.
-In fact, student A has nearly completed assignment2.
-Student B however, has not even started on assignment2, but because they can now access student A's assignments, they see how he/she did it.
+Student A is also diligent, and has already started working on assignment 2.
+In fact, student A has nearly completed assignment 2.
+Student B however, has not even started on assignment 2, but because they can now access student A's assignments, they see how he/she did it.
 
 As a consequence, using GitHub teams would mean that assignments can only be published after the deadline of the previous one is passed.
 A prospect that would probably not be appealing to most teachers.
@@ -39,15 +40,15 @@ For one, QuickFeed must be expanded to handle, amongst other things, the followi
 \begin{itemize}
     \item Creating clone repositories containing only the assignment that is relevant, and the accompanying pull request.
     \item Deleting these repositories when they are no longer needed.
-    \item Associating actions on the original repository, with the new one.
-    I.e. we must make sure that any relevant additions are transparent in both
+    \item Associating actions on the original repository with the new one.
+    I.e. we must make sure that any relevant additions to the original repository are reflected in the cloned one.
     \item Account for all possible complications that may occur.
 \end{itemize}
 
 An implementation like this also assumes that only one review is required per assignment, when there could in fact be several.
 If for example an assignment has three tasks, and therefore three related pull requests, how do we then create these clone repositories?
 Would we create one per pull request?
-This seems like a terrible approach, as the number of repositories created would me enormous in courses with many students and assignments.
+This seems like a terrible approach, as the number of repositories created would me enormous in courses with many students.
 
 Let us say that we, despite these challenges, managed to create a fully functional implementation of the above solution.
 We now have to cope with the prospect of having further complexified the user experience.
