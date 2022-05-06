@@ -5,8 +5,12 @@
 \usepackage{uis-thesis}
 \usepackage{listings}
 \renewcommand{\lstlistingname}{Code}
-\usepackage{listings-golang} % import this package after listings
+\usepackage{listings-golang}
 \usepackage{color}
+\usepackage{biblatex}
+\usepackage{csquotes}
+
+\addbibresource{references.bib}
 
 \definecolor{backcolour}{rgb}{0.95,0.95,0.92}
 
@@ -69,6 +73,10 @@
 \input{chapters/implementation}
 \input{chapters/discussion}
 \input{chapters/conclusions}
+\printbibliography[
+heading=bibintoc
+]
+
 
 %-----------------------------------------------------------------
 % Now begin the Appendices, including them as separate files
@@ -76,7 +84,8 @@
 % \listoffigures
 % \listoftables
 
-\appendix
+% \appendix
+
 
 %-----------------------------------------------------------------
 % \backmatter
