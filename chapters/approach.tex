@@ -41,7 +41,7 @@ For one, QuickFeed must be expanded to handle, amongst other things, the followi
     \item Creating clone repositories containing only the assignment that is relevant, and the accompanying pull request.
     \item Deleting these repositories when they are no longer needed.
     \item Associating actions on the original repository with the new one.
-    I.e. we must make sure that any relevant additions to the original repository are reflected in the cloned one.
+    I.e., we must make sure that any relevant additions to the original repository are reflected in the cloned one.
     \item Account for all possible complications that may occur.
 \end{itemize}
 
@@ -155,7 +155,7 @@ Which again boils down to the fundamental issue on how QuickFeed authenticates w
 To facilitate automatic feedback on individual pull requests, the initial idea was to use GitHub workflows.
 Mainly due to the fact that workflows are already tightly integrated into the GitHub pull request user interface.
 
-As students work on tasks, we imagined using workflows to give feedback based on the tests run on their code. % TODO: Bad sentence
+As students work on tasks, we imagined using workflows to give feedback based on the tests run on their code.
 However, as we researched ways to implement this, it became apparent that workflows were not an optimal approach.
 For one, to have GitHub register a workflow, a \textit{.yml} file describing it must be present on the repository.
 These files would have to be created and pushed to \textit{tests}, and then pulled by every student.

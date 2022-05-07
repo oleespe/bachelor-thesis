@@ -59,7 +59,6 @@ A web interface that allows students to enroll in courses, create groups and rec
 And a backend that tests, scores and grades student submitted code.
 The backend is primarily implemented with the Go programming language, while the frontend uses TypeScript and the React library.
 For data storage, QuickFeed relies on an SqLite-database, managed using the the GORM library.
-% TODO: Should consider splitting this chapter in two. One describing some of the technology QuickFeed uses, and one that highlights some of its % features
 
 In this section we further describe some of QuickFeed's key concepts, as well as the technology it uses.
 
@@ -71,26 +70,27 @@ When the file is compiled, data structures and methods for the desired language 
 QuickFeed uses protobuf to generate most of its data structures.
 These are then stored in its internal database when necessary.
 
-\begin{lstlisting}[caption={Group message}]
-message Group {
-    enum GroupStatus {
-        PENDING  = 0;
-        APPROVED = 1;
-    }
-    uint64 ID          = 1;
-    string name        = 2;
-    uint64 courseID    = 3;
-    uint64 teamID      = 4;
-    GroupStatus status = 5;
-
-    repeated User users             = 6;
-    repeated Enrollment enrollments = 7;
+\begin{lstlisting}[caption={Assignment message}, label={code:Assignment}]
+message Assignment {
+    uint64 ID                       = 1;
+    uint64 CourseID                 = 2;
+    string name                     = 3;
+    string scriptFile               = 4;
+    string deadline                 = 5;
+    bool autoApprove                = 6;
+    uint32 order                    = 7;
+    bool isGroupLab                 = 8;
+    uint32 scoreLimit               = 9;
+    uint32 reviewers                = 10;
+    uint32 containerTimeout         = 11;
+    repeated Submission submissions = 12;
+    repeated GradingBenchmark gradingBenchmarks = 14;
 }
 \end{lstlisting}
 
-The code above is an example of such a message.
-It holds a reference to a single \textit{Course} message and several \textit{User} messages, as seen on Line 8 and 12 respectively.
-When compiled, the resulting data structure is used by QuickFeed to represent groups.
+Code \ref{code:Assignment} is an example of such a message.
+It holds a reference to a single \textbf{Course} message and several \textbf{Submission} messages, as seen on Line 3 and 13 respectively.
+When compiled, the resulting data structure is used by QuickFeed to represent assignments.
 
 It should be noted that QuickFeed also uses all these messages in conjunction with gRPC to facilitate server-client communication.
 This part is however not relevant for this project.
@@ -119,14 +119,21 @@ The \textit{scripts} folder is used to store a \textit{run.sh} file and a Docker
 The \textit{assignment.yml} file is used by teachers to specify assignment specific settings.
 As an example, it can contain information about the assignment deadline, whether it is manually graded, and more.
 
+\begin{lstlisting}[caption={Example contents of an \textit{assignment.yml} file}, numbers=none]
+assignmentid: 1
+name: "lab1"
+scriptfile: "run.sh"
+deadline: "15-05-2022T16:00"
+autoapprove: false
+isgrouplab: true
+\end{lstlisting}
+
 The \textit{run.sh} file contains the script used by QuickFeed when testing student code.
 As explained, it is contained within the \textit{scripts} folder, but can also be located within the specific assignments themselves.
 When running tests on an assignment, QuickFeed will prioritize using any assignment specific script files.
 
-Finally, the Dockerfile contained within \textit{scripts} is used to create a docker image.
-Within this image, QuickFeed runs the appropriate script, derived from \textit{run.sh}.
-
-Being a repository that is used and managed solely by the teaching staff, it follows that students do not have access to its contents.
+Finally, the Dockerfile contained within \textit{scripts} is used to create a docker container.
+Within this container, QuickFeed runs the appropriate script, derived from \textit{run.sh}.
 
 \begin{figure}[ht]
     \centering
@@ -134,6 +141,12 @@ Being a repository that is used and managed solely by the teaching staff, it fol
     \caption{Example of a tests repository folder structure}
     \label{fig:tests-repository-structure}
 \end{figure}
+
+Every time a teacher pushes to \textit{tests}, QuickFeed runs the function UpdateFromTestsRepo.
+This function will parse an assignment's \textit{assignment.yml} file, and use its contents to create data objects defined by the \textbf{Assignment} message.
+They are then used to create or update assignment database records.
+
+Being a repository that is used and managed solely by the teaching staff, it follows that students do not have access to its contents.
 
 Student repositories: There are two types of student repositories, user and group repositories.
 A user in this case would simply be any student who has enrolled in the course.
@@ -166,10 +179,10 @@ For example, a test can loop through several test conditions, and then decrement
 These tests have to be explicitly added by teachers using either of the following methods: Add and AddSub.
 Doing so, they are included in the pool of all tests that constitute an assignment.
 
-Each individual score is defined in a data structure generated by the below protobuf message.
+Each individual score is defined by the protobuf message in Code \ref{code:Score}.
+When QuickFeed is finished running all tests, a test results data object is extracted containing a list of all these scores.
 
-% TODO: Should maybe explain some of these fields
-\begin{lstlisting}[caption={Score message}]
+\begin{lstlisting}[caption={Score message}, label={code:Score}]
 message Score {
     uint64 ID =           1;
     uint64 SubmissionID = 2;
@@ -181,8 +194,12 @@ message Score {
 }
 \end{lstlisting}
 
-When QuickFeed is finished running all tests, a test results data object is extracted containing a list of all these scores.
-These are then used to generate a total score for the submission in question.
+The fields, Score and MaxScore are used to generate the given test's percentage score.
+Weight on the other hand, defines the weight of any test in relation to all others in an assignment.
+Say we have a test with a given weight of 5, and an assignment where all test weights summed up, give a total weight of 10.
+Then that test would account for 50\% of the entire assignment.
+So if a student got a score of 3 out of 6 on this test, the result would be an assignment score of 25\% for that test.
+Adding up all scores like this for an entire assignment, gives us the assignment total score.
 
 \subsection{Testing Assignments}
 
@@ -206,7 +223,7 @@ When this process is finished, QuickFeed extracts the test run's results and use
 QuickFeed communicates with GitHub in two ways.
 In this section we will detail one of them, namely webhooks.
 
-A webhook is a "user-defined callback over HTTP". % (ref: (09.04) https://developer.atlassian.com/server/jira/platform/webhooks/)
+A webhook is a "user-defined callback over HTTP" \cite{webhook}. 
 In general, webhooks allow developers to listen to events from any supporting site.
 When any such event occurs, an HTTP request is sent to the address configured for the webhook.
 The request contains data about the event, usually in a JSON format.
@@ -217,17 +234,20 @@ This webhook is only triggered by push events, which are then handled by QuickFe
 
 \begin{itemize}
     \item If a push event is associated with the \textit{tests} repository, QuickFeed will update the course assignments.
-    \item If a push event is associated with a student repository, QuickFeed will determine the assignments that have been changed/worked on, 
+    \item If a push event is associated with a student repository, QuickFeed will determine the assignments that have been worked on,
     and run the assignment tests on them.
 \end{itemize}
 
 \subsection{Source Control Management API}
-% TODO: Should say that QF authenticates with the GitHub API by being an Oath app.
+
 The second way QuickFeed communicates with GitHub is through a custom API.
 
-To facilitate communication with potentially any source control management system, a custom API has been developed for QuickFeed, which is usually abbreviated as the SCM API.
-The current iteration of QuickFeed supports interacting with GitHub through this API, via the go-github library. % (ref: go-github)
+To facilitate communication with potentially any source control management system, a custom source control management API has been developed for QuickFeed.
+Usually abbreviated as the SCM API, the current iteration of QuickFeed supports interacting with GitHub through this API, via the go-github library.
 The library itself, communicates with GitHub's own REST API using HTTP requests.
+
+To authenticate with this GitHub API, QuickFeed is implemented as an OAuth app.
+In essence, this means that QuickFeed can authenticate with the GitHub API, as the identity of any of its users \cite{oauth}.
 
 The SCM API allows QuickFeed to perform various tasks, such as creating/updating repositories, creating webhooks, managing teams and more.
 QuickFeed's SCM API, together with webhooks, form a 2-way communication stream between QuickFeed and GitHub.

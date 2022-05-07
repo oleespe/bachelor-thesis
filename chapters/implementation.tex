@@ -5,12 +5,12 @@
 
 \section{Introduction}
 
-% TODO: Write introduction to implementation
-Text text
+In this chapter, we explore how the project was implemented.
+Describing all additions that were made to QuickFeed, some of the challenges faced with certain additions, and how they all tie together.
 
 \subsection{Feature Overview}
 
-To fully grasp what we need to implement, this section describes all the features we want to have QuickFeed support.
+To fully grasp what to implement, this section describes all the features we want to have QuickFeed support.
 
 \textbf{Tasks and issues}
 
@@ -32,7 +32,7 @@ QuickFeed should then support...
 \begin{itemize}
     \item Returning automatic feedback in the form of a comment every time a student pushes to a pull request.
     \item Automatically assigning appropriate reviewers when students get a passing score on their code.
-    Specifically one teacher and one other group member.
+    Specifically, one teacher and one other group member.
 \end{itemize}
 
 \section{Existing implementation}
@@ -84,7 +84,7 @@ Any following text there after will be treated as the task body or description.
 
 Using this format, the function newTask creates a task data object from any task file.
 
-\lstinputlisting[caption={Function that creates a task object from markdown content}, language=Golang, firstline=25, lastline=40]{code/tasks.go}
+\lstinputlisting[caption={The newTask function}, language=Golang, firstline=25, lastline=40]{code/tasks.go}
 
 Going forward, the general approach to parsing and creating tasks is left as it is, with only minor changes to the existing code.
 
@@ -97,10 +97,14 @@ An issue on the other hand, is defined as any GitHub issue based on these tasks.
 As an example, we can have a course with an assignment containing three tasks.
 In this course, we also have five group repositories.
 These three tasks should then be represented on all five group repositories as GitHub issues, giving us a total of 15 issues.
-Tasks therefore function as a "benchmark" used to create issues.
+Tasks therefore function as a "benchmark", used to create issues.
 In this thesis students can be referred to as solving both tasks and issues, which in essence means the same thing.
 
 \subsection{Approach}
+% TODO: Should read through the managing tasks and issue part, and find the best way to explain how we associate DBtasks and TRtasks,
+% and why we need to do so.
+% Also the difference between issues and tasks.
+% Should generally just review how we explain everything.
 
 To support teachers creating, updating and deleting tasks, QuickFeed must have the capacity to handle these events.
 For example, if a task is created, QuickFeed should create an issue based on it in every group repository within the relevant course.
@@ -113,13 +117,13 @@ Doing so, we can compare it with every task parsed in UpdateFromTestsRepo, the f
 Furthermore, by storing a reference to every issue we create, they can be used when tasks are updated or deleted, to update and delete all issues associated with these tasks.
 
 The process of synchronizing both tasks and issues is handled by the new function handleTasks, which is run as part of UpdateFromTestsRepo.
-The function handleTasks, and the synchronization process in general, are further described in the following sections. 
+The function handleTasks and the synchronization process in general, are further described in the following sections. 
 
 To avoid confusion, we define the following distinctions for assignments and tasks.
 \begin{itemize}
-    \item TRtask - \textit{tests} repository task. Meaning any task represented by a \textit{task-*.md} markdown file in \textit{tests}.
+    \item TRtask - tests repository task. Meaning any task represented by a \textit{task-*.md} markdown file in \textit{tests}.
     \item DBtask - database task. Meaning any task that refers to an existing task data record stored in the database.
-    \item TRassignment - \textit{tests} repository assignment. Meaning any assignment represented by a folder and \textit{assignment.yml} file
+    \item TRassignment - tests repository assignment. Meaning any assignment represented by a folder and \textit{assignment.yml} file
     in \textit{tests}. 
     \item DBassignment - database assignment. Meaning any assignment referring to an existing stored assignment data record.
 \end{itemize}
@@ -137,7 +141,6 @@ These are used to generate the data structures that are stored in the database.
 The title and body fields are defined by the contents of a task markdown file.
 They are used to represent the title and body of any issue that is created from a given task.
 
-% TODO: Should maybe describe the assignment message in background, how the assignment.yml file is parsed into it. See Hein review.
 For an assignment, order is a number used to determine the order in which it is represented in a course.
 It is set by a teacher in the \textit{assignment.yml} file, as described in Section \ref{sec:quickfeed-repository-structure}.
 When creating a new task, keeping track of the corresponding assignment order is useful.
@@ -171,27 +174,27 @@ taskMap[assignmentOrder][taskName] = TRtask
 \end{lstlisting}
 This mapping allows us to loop through all DBassignment records in a course, and associate each of its DBtasks with a TRtask.
 
-The process of synchronizing DBtasks is explained as follows.
-For every DBtask in a DBassignment, check if it has the same name as any of the TRtasks.
+The process of synchronizing tasks is explained as follows.
+For every DBtask in a DBassignment, check if it has the same name as any of the TRtasks belonging to the TRassignment with the same order.
 If no match can be found for the DBtask, it must mean that the TRtask has been removed, and the task itself no longer exists.
-The DBtask can therefore be safely deleted.
+The DBtask can therefore safely be deleted.
 However, if there is a match for the DBtask, we check if its body or title differs from its TRtask counterpart.
-If true, it must mean that the task has been updated, and if not, the task remains unchanged.
+If true, it means that the task has been updated, and if not, it remains unchanged.
 Furthermore, any TRtask that is not represented by a DBtask must represent a new task, and we therefore create a DBtask to represent it.
 
 The main synchronization logic performed by SynchronizeAssignmentTasks is listed in Code \ref{code:SynchronizeAssignmentTasks}.
 Note that error handling has been removed for simplicity.
 
-% TODO: Should find a font for the comments, that makes them smaller.
 \begin{lstlisting}[caption={Task synchronization performed by SynchronizeAssignmentTasks}, 
-                            language=Golang, label={code:SynchronizeAssignmentTasks}]
+                            language=Golang, label={code:SynchronizeAssignmentTasks},
+                            commentstyle={\slshape}]
 for _, DBassignment := range DBassignments {
 	var DBtasks []*pb.Task
 	tx.Find(&DBtasks, &pb.Task{AssignmentID: DBassignment.GetID()})
 	for _, DBtask := range DBtasks {
 		TRtask, ok := taskMap[DBassignment.Order][DBtask.Name]
 		if !ok {
-			// Existing task in database not among the supplied tasks to synchronize.
+			// Existing task in database not among the supplied tasks
 			tx.Delete(DBtask).Error
 			DBtask.MarkDeleted()
 			updatedTasks = append(updatedTasks, DBtask)
@@ -202,7 +205,7 @@ for _, DBassignment := range DBassignments {
 			continue
 		}
 		if DBtask.HasChanged(TRtask) {
-			// Task has been changed and must be updated.
+			// Task has been changed and must be updated
 			DBtask.Title = TRtask.Title
 			DBtask.Body = TRtask.Body
 			updatedTasks = append(updatedTasks, DBtask)
@@ -233,7 +236,8 @@ Issue data records also never need to be updated, since they carry no other non-
 The only remaining database related synchronization for issues is therefore creating them.
 
 The entire process of synchronizing issues happens in handleTasks, and is shown in Code \ref{code:handleTasks}.
-\begin{lstlisting}[caption={Issue synchronization performed by handleTasks}, language=Golang, label={code:handleTasks}]
+\begin{lstlisting}[caption={Issue synchronization performed by handleTasks}, language=Golang, label={code:handleTasks},
+                    commentstyle={\slshape}]
 createdIssues := []*pb.Issue{}
 for _, repo := range repos {
 	if !repo.IsGroupRepo() {
@@ -277,9 +281,9 @@ For this purpose, the \textbf{PullRequest} message is created.
 \begin{lstlisting}[caption={PullRequest message}]
 message PullRequest {
     enum Stage {
-        NONE    = 0;
-        DRAFT   = 1;
-        REVIEW  = 2;
+        NONE     = 0;
+        DRAFT    = 1;
+        REVIEW   = 2;
         APPROVED = 3;
     }
     uint64 ID                   = 1;
@@ -294,8 +298,8 @@ message PullRequest {
 }
 \end{lstlisting}
 
-% TODO: Describe this message, and why certain fields are needed.
-% TODO: Describe why linking the issue is important, i.e. we can delete the issue data record, and the issue is closed on GitHub.
+It holds a reference to the issue that it was created for, as well as the task that serves as the benchmark for said issue.
+These references allow us to quickly relate any pull request to its corresponding task and issue.
 
 \subsection{Creating Pull Requests}
 
@@ -308,10 +312,10 @@ To accommodate this feature, QuickFeed must react to the pull requests being ope
 Expanding QuickFeed to also handle pull request related webhooks, allows us to do just that.
 
 Specifically, when a pull request is opened the handlePullRequestOpened function is run.
-It will check if a pull request is legitimate, i.e. it was created on a group repository and linked to the correct issue.
+It will check if a pull request is legitimate, i.e., it was created on a group repository and linked to the correct issue.
 If successful, the function creates a new record to represent it, by using the data in the event payload, and then stores it in the database.
 
-Associating a pull request to an issue requires that the student themselves explicitly do so.
+Associating a pull request to an issue requires the students themselves explicitly doing so.
 GitHub allows you to link issues to pull requests on their creation, by inserting a reference to them in the pull request body.
 Doing so, we thought that the linked issue would also be part of the webhook payload, however, this turned out to be incorrect.
 Instead we have to parse the issue number from the pull request body itself, as shown below.
@@ -338,7 +342,7 @@ This is further discussed in section .% TODO: Ref to relevant discussion section
 
 When students close and merge pull requests---ideally when they are supposed to---QuickFeed must also act accordingly.
 Again, we use webhooks to listen to pull request closed events, and single out those that are relevant to QuickFeed.
-Relevant in this context, is any event for a pull request that already exist in QuickFeed's database, i.e. they were created as part of the process described in the above section.
+Relevant in this context, is any event for a pull request that already exist in QuickFeed's database, i.e., they were created as part of the process described in the above section.
 Events for pull requests that are closed, but not merged, can also be filtered out, as these constitute an incorrect close.
 If students do happen to close pull requests like this, a working state can be restored by the student, simply by reopening it.
 QuickFeed doing nothing in these cases is therefore the simplest solution.
@@ -364,20 +368,19 @@ Any solution might also not be backwards compatible.
 To implement our features though, QuickFeed does not need to test task related code, only score it.
 As such, we can instead complement the score package to support this functionality.
 
-% TODO: Need to describe the following changes further, and use code samples
 Doing so turned out to be pretty straight forward.
 First, the score message described in Section \ref{sec:the-score-package} is modified to also include a task name field.
 Doing so, gives us a direct reference to the task a given score is associated with.
 Furthermore, to support teachers adding task specific tests, two new variants of the existing Add and AddSub methods are created.
 These allow teachers to specify the task name a test should be a part of.
 Finally, to generate a task specific total score, QuickFeed simply sums over the scores that have that task's name.
+With these changes implemented, we can generate a score from 0 - 100 for specific tasks, just as is already possible for entire assignments.
 
 It should be noted that when referring to a task name in the context of the score package, we mean the local task name.
-The local task name differs from the regular one by omitting the assignment name prefix.
+The local task name differs from the regular one by omitting the assignment name.
 As an example, a task with the name \textit{assignment1/hello\_world} will have the local name \textit{hello\_world}.
 This was primarily done to make the process of associating tests and tasks more intuitive for the teachers doing so.
 
-With these changes implemented, we can generate a score from 0 - 100 for specific tasks, just as is already possible for entire assignments.
 
 \section{Manual Feedback}
 
@@ -420,7 +423,7 @@ getNextReviewer's purpose is to find, amongst the supplied users, the one that h
 By supplying it with all course teachers or a group's members, it finds the next eligible teacher or student reviewer respectively.
 To tackle the second problem mentioned earlier, we make sure to to not include the pull request owner in the user list.
 
-\begin{lstlisting}[caption={The getNextReviewer function}, language=Golang]
+\begin{lstlisting}[caption={The getNextReviewer function}, language=Golang, commentstyle={\slshape}]
 func getNextReviewer(ID uint64, users []*pb.User, reviewCounter map[uint64]map[uint64]int) (*pb.User, error) {
 	if len(users) == 0 {
 		return nil, errors.New("list of users is empty")
@@ -525,7 +528,7 @@ CreateFeedbackComment(results, &pb.Task{Name: "lab1/1"},
 
 The resulting comment body in Figure \ref{fig:feedback-comment} is then created.
 Note that the tests with name \textit{Test6} and \textit{Test7} are omitted from the table, because they are not associated with the task supplied to CreateFeedbackComment.
-I.e. they do not have the same name.
+I.e., they do not have the same name.
 
 \begin{figure}[ht]
     \centering
