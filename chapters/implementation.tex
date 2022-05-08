@@ -111,10 +111,10 @@ For example, if a task is created, QuickFeed should create an issue based on it 
 Similarly, as tasks are updated or deleted, these changes must also be reflected in every issue created from them.
 In short, we need to keep every issue in sync with its associated task.
 
-To accomplish this, we keep a reference to every task and issue in QuickFeed's database.
+To accomplish this, we keep a record every task and issue in QuickFeed's database.
 The task database records are used to store a reference to what a given task looked like on the last push to \textit{tests}.
-Doing so, we can compare it with every task parsed in UpdateFromTestsRepo, the function that finds and creates assignments and tasks based on the contents of \textit{tests}.
-Furthermore, by storing a reference to every issue we create, they can be used when tasks are updated or deleted, to update and delete all issues associated with these tasks.
+Doing so, we can at any subsequent push check if a task is in a different state than it was before.
+Furthermore, by storing a reference to every issue created, we can know which issues need to be changed if necessary.
 
 The process of synchronizing both tasks and issues is handled by the new function handleTasks, which is run as part of UpdateFromTestsRepo.
 The function handleTasks and the synchronization process in general, are further described in the following sections. 
@@ -481,6 +481,7 @@ This comment must be updated every time the student pushes to their pull request
 A function that is used to manage all non-default branch pushes to group repositories, as described in Section \ref{sec:assigning-reviewers}.
 
 \subsection{Formatting Feedback Comments}
+\label{sec:formatting-feedback-comments}
 
 To create the feedback comment itself, we must format one based on the test results for a given push.
 For this purpose, we create the function CreateFeedbackComment.
@@ -488,7 +489,7 @@ For this purpose, we create the function CreateFeedbackComment.
 The general idea is to use the task specific scores, as part of the test results for an assignment, to generate a table.
 For every task specific test, we can describe its received score, the weight of the test, and how much the results from that test counts towards the total score.
 GitHub lets you create tables in comments by using a special string formatting.
-With this in mind, CreateFeedbackComment is described in Code \ref{code:CreateFeedbackComment}.
+With this in mind, CreateFeedbackComment is implemented as described in Code \ref{code:CreateFeedbackComment}.
 
 \begin{lstlisting}[caption={The CreateFeedbackComment function}, label={code:CreateFeedbackComment}, language=Golang]
 func CreateFeedbackComment(results *score.Results, task *pb.Task, assignment *pb.Assignment) string {
@@ -526,7 +527,7 @@ CreateFeedbackComment(results, &pb.Task{Name: "lab1/1"},
                         &pb.Assignment{Name: "lab1", ScoreLimit: 80})
 \end{lstlisting}
 
-The resulting comment body in Figure \ref{fig:feedback-comment} is then created.
+The resulting comment body in Figure \ref{fig:feedback-comment} is then generated.
 Note that the tests with name \textit{Test6} and \textit{Test7} are omitted from the table, because they are not associated with the task supplied to CreateFeedbackComment.
 I.e., they do not have the same name.
 
@@ -542,9 +543,9 @@ I.e., they do not have the same name.
 To actually publish the feedback comments to a GitHub pull request, we again expand the SCM API.
 The function CreateIssueComment is used to create the comments, while EditIssueComment updates existing ones.
 The reason for using "Issue" in the function names instead of "PullRequest", is because GitHub treats pull requests as issues with code.
-GitHub API calls to comment on issues and pull requests is therefore the same.
+GitHub API calls to comment on issues and pull requests are therefore the same.
 
 The first time a student pushes to a pull request, we use CreateIssueComment to create the initial comment.
 CreateIssueComment returns the ID of the comment that was created, which is then stored as a field on the relevant pull request record.
 Any subsequent pushes to the same pull request will then instead use EditIssueComment, which takes that ID as an argument.
-Doing so, only one comment is present on the student's pull request.
+Doing so, only one comment is present on the student's pull request, and is constantly updated with new relevant data.

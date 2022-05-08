@@ -134,6 +134,7 @@ It is worth noting that these two approaches are not mutually exclusive, and Qui
 In fact, the initial idea was to implement them both, and thus getting all their benefits.
 
 \section{Issue Creation}
+\label{sec:issue-creation}
 
 Having discussed our approach on creating pull requests, we continue by exploring a similar problem.
 How do we create issues?
@@ -157,33 +158,22 @@ Mainly due to the fact that workflows are already tightly integrated into the Gi
 
 As students work on tasks, we imagined using workflows to give feedback based on the tests run on their code.
 However, as we researched ways to implement this, it became apparent that workflows were not an optimal approach.
-For one, to have GitHub register a workflow, a \textit{.yml} file describing it must be present on the repository.
+For one, to have GitHub register a workflow, a \textit{.yml} file describing it must be present on any relevant repository.
 These files would have to be created and pushed to \textit{tests}, and then pulled by every student.
 The biggest problem however, is that GitHub does not support triggering workflows manually via API, and at the same time having them appear in a pull request.
 Meaning that we can trigger workflows remotely, but we cannot have them be displayed within a pull request on the same trigger.
 
-As a consequence we have to find potential alternate solutions.
-These are discussed in detail in the following sections.
+As a consequence, finding an alternate solution solution became necessary.
+Of the options researched, the one we went with is described in the following section.
 
 \subsection{Pull Request Comments}
 
 Instead of providing automatic feedback via GitHub workflows, we can instead do so by commenting on the pull request itself.
-GitHub's API allows for doing this, again with the caveat that we must comment in a student or teachers name.
+GitHub's API allows for doing this, again, with the caveat that we must comment as a student or teachers.
 Here, the easiest solution is to simply comment as the student that created the pull request.
+The comment itself can be constantly updated with new feedback, every time students push to their pull request.
 
-\subsection{GitHub Checks API}
-
-Another interesting option is to use GitHub's Checks API.
-
-Cannot use because not GitHub App
-Must explore this further before describing it.
-
-\section{Feedback content}
-
-Not fully implemented yet.
-Also what should this feedback consist of? Can look at the type of automatic feedback they receive in web interface.
-
-\section{GitHub App}
-
-Should discuss the need to be able identify as QuickFeed when performing many of the actions needed in the implementation.
-These include creating issues, creating pull requests and if 
+Currently, the automatic feedback QuickFeed returns via its web interface, describes how each individual test for an assignment fared.
+Furthermore, it also gives a general score for the entire assignment, giving students an indication of well they did overall.
+With this in mind, the type of feedback returned by these comments should strive to do something similar.
+The actual format used, is described further in Section \ref{sec:formatting-feedback-comments}.

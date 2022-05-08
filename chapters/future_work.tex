@@ -1,0 +1,41 @@
+\chapter{Future Work}
+
+% TODO: Write intro
+This is only a baseline.
+Lots of potential for the features developed.
+
+\section{Further QuickFeed Integration}
+
+Even though QuickFeed now supports pull requests, issues and tasks, they are not highly integrated with the rest of QuickFeed.
+The features developed in this project are mostly standalone, and not generally connected with QuickFeed's existing ones.
+
+To illustrate, we can imagine a teacher creating an assignment with several tasks.
+A group could in theory correctly solve all parts of this assignment, push it to their group repository, and then have it scored the regular way.
+They would still get a passing score in QuickFeed's web interface, all the while having skipped the entire pull request process.
+Similarly, doing things the intended way also has no direct consequence on how QuickFeed treats the assignment submission as a whole.
+Having a pull request approved, has no impact on how an assignment is approved.
+Only when a teacher approves the assignment via the web interface, is it actually approved.
+
+A suggestion is therefore to further integrate the implemented features with QuickFeed's assignment submission process.
+For example, a requirement to getting an assignment approved, could be to have all relevant pull requests approved.
+To support this, one would have to develop a system that compares the number of approved pull requests, to the number of tasks for an assignment.
+Implementing this would also require a rethink of the entire assignment approval process.
+
+If such a system is developed, there is also the potential to further integrate it with QuickFeed's existing web interface.
+For example, assignments that rely on pull request approval, can be made to not require explicit approval via the web interface.
+The assignment can instead be automatically approved once all relevant pull requests are.
+This way, the need for a custom web interface diminishes.
+
+Another way to move away from a custom web interface to simply relying on GitHub's, could be to expand on the feedback given in the pull request comments.
+Technically, all data that is used for the current automatic feedback system, is also available to be published in these comments.
+Of course, there might be limitations to the amount of information a pull request comment can reliably express, but the potential is still there.
+
+\section{Further GitHub Integration}
+
+There is also the potential to further integrate with GitHub.
+
+GitHub's Checks API seems to have a lot of potential \cite{checks}.
+In short, it can be used to create custom checks on a pull request, by sending special webhook events every time someone pushes code to a repository.
+These checks can then be used on a pull request to signals whether it has been correctly approved or not
+Furthermore, if we only allow pull request merges when this check passes, we can avoid students incorrectly merging pull requests altogether.
+GitHub supports limiting access like this by specifying rules on repository branches \cite{branches}.

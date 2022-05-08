@@ -50,6 +50,7 @@ Through its features, GitHub pull requests provide an efficient and manageable w
 
 \subsection{Workflows}
 
+% TODO: Remember to either write this part, or delete it.
 Maybe maybe
 
 \section{QuickFeed}
@@ -126,6 +127,7 @@ scriptfile: "run.sh"
 deadline: "15-05-2022T16:00"
 autoapprove: false
 isgrouplab: true
+reviewers: 2
 \end{lstlisting}
 
 The \textit{run.sh} file contains the script used by QuickFeed when testing student code.
@@ -247,7 +249,7 @@ Usually abbreviated as the SCM API, the current iteration of QuickFeed supports 
 The library itself, communicates with GitHub's own REST API using HTTP requests.
 
 To authenticate with this GitHub API, QuickFeed is implemented as an OAuth app.
-In essence, this means that QuickFeed can authenticate with the GitHub API, as the identity of any of its users \cite{oauth}.
+In essence, this means that QuickFeed can authenticate with the GitHub API, as the identity of any of its users \cite{apps}.
 
 The SCM API allows QuickFeed to perform various tasks, such as creating/updating repositories, creating webhooks, managing teams and more.
 QuickFeed's SCM API, together with webhooks, form a 2-way communication stream between QuickFeed and GitHub.
