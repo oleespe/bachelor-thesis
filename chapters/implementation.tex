@@ -301,6 +301,12 @@ message PullRequest {
 It holds a reference to the issue that it was created for, as well as the task that serves as the benchmark for said issue.
 These references allow us to quickly relate any pull request to its corresponding task and issue.
 
+The stage field is used to keep track of the "stage" a pull request is in.
+When a pull request is first created, it is in the draft stage.
+Once enough of its tests are passing, it moves to the review stage, meaning that it is now ready for review.
+The final stage, approved, is reached when a teacher actually approves the pull request.
+How these stages are traversed, and how we know when to go from one to another is described in the following sections.
+
 \subsection{Creating Pull Requests}
 
 As students create pull requests to solve issues/tasks, we must make sure that a pull request record is created and stored internally to represent them.
@@ -320,7 +326,7 @@ GitHub allows you to link issues to pull requests on their creation, by insertin
 Doing so, we thought that the linked issue would also be part of the webhook payload, however, this turned out to be incorrect.
 Instead we have to parse the issue number from the pull request body itself, as shown below.
 
-\begin{lstlisting}[caption={The getLinkedIssue function}, language=Golang]
+\begin{lstlisting}[caption={The getLinkedIssue function}, language=Golang, label={code:getLinkedIssue}]
 func getLinkedIssue(body string) (uint64, error) {
 	if count := strings.Count(body, "#"); count != 1 {
 		return 0, errors.New("pull request body does not contain exactly one '#' character")
@@ -356,6 +362,7 @@ This way, a student doing an incorrect merge can simply reopen the issue that wa
 Thereby restoring a working state with little QuickFeed involvement.
 
 \section{Scoring Tasks}
+% TODO: Also need to talk about how we must now check out a local git branch.
 
 To allow for both automatic and manual feedback, we need a way to score tasks.
 Delivering automatic feedback requires us to do so solely on the tests associated with any given task.
@@ -380,7 +387,6 @@ It should be noted that when referring to a task name in the context of the scor
 The local task name differs from the regular one by omitting the assignment name.
 As an example, a task with the name \textit{assignment1/hello\_world} will have the local name \textit{hello\_world}.
 This was primarily done to make the process of associating tests and tasks more intuitive for the teachers doing so.
-
 
 \section{Manual Feedback}
 

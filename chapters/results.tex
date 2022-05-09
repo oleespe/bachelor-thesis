@@ -1,0 +1,144 @@
+%!TEX root = ../thesis.tex
+
+\chapter{Results}
+
+\section{Insights}
+
+% TODO: Discussions on the implementation and how the project went.
+
+\subsection{QuickFeed Test Environment}
+
+% TODO: Write
+Brief explanation on existing testing environment, i.e., qtest
+For example, we have two populateDatabaseWithTasks functions in two different places
+
+Can maybe discuss the potential to have a more efficient way of testing things, such as webhook related stuff.
+For example, I am currently hard coded into some of the db population functions, to facilitate testing.
+Would be better if this was more independent. 
+Could maybe have certain QF test GitHub users?
+
+\subsection{User Experience}
+
+The features implemented in this project impose new demands on both students and teachers wanting to use them.
+The most apparent of them are listed in this section.
+
+Students solving group assignments with tasks, must be able to, or made aware of the following:
+\begin{itemize}
+    \item How GitHub issues work, and the fact that they are representations of tasks that teachers have created.
+    \item How to create new branches and commit to them.
+    \item How to create pull requests from these branches, and link the correct issue to them.
+    \item How to actually solve tasks.
+    Meaning that they must know which parts of an assignment is relevant for a given task.
+    \item How the general flow of an assignment with tasks goes.
+    In essence, they must know the three stages that are relevant for pull requests; draft, review and approved.
+    \item How to close and merge pull requests when they are approved.
+    \item How to handle situations where something goes wrong.
+    For example, if they create a pull request without correctly linking the relevant issue.
+\end{itemize}
+
+Similarly, teachers and the teaching staff in general must know the following:
+\begin{itemize}
+    \item How to create tasks via markdown files.
+    \item How to associate tests with tasks, using the score package.
+    \item How to help students failing with any of the points in the previous list.
+\end{itemize}
+
+Especially for students, there is a lot of new "stuff" to deal with.
+Any assignment would have to carefully explain the points mentioned above.
+
+\section{Known Limitations}
+
+There are certain known limitations to this project's implementation.
+They are listed in this section.
+
+\subsection{Differing Branch Names}
+
+There is a weakness related to students potentially having remote and local branches with different names.
+
+To facilitate testing and scoring of student code on non-default local branches, we have to check out that local branch.
+We get the branch name to check out, through the pull request opened event payload.
+This branch name however, is for the remote GitHub repository the pull request was created for.
+Students can in theory create a local branch called "branch1", and push it to the remote branch "branch2".
+If this is done, QuickFeed has no reference to the local branch it needs to run tests on.
+
+\subsection{Human Error}
+
+There are certain actions students can perform, that QuickFeed simply cannot handle with the current implementation.
+
+For instance, if students were to manually delete the issues that QuickFeed creates, there would be no way of recreating them.
+This would break the entire assignment process, as students can no longer create pull requests for these issues.
+Similarly, students can also delete the feedback comments created on their pull requests.
+If this happens, an error will occur when QuickFeed tries to publish new feedback to the deleted comment.
+
+Of course, these are fringe cases, as they require students doing something the probably would know to be incorrect.
+They are still worth taking into consideration.
+
+\subsection{Manually Graded Assignments}
+
+% TODO: Need to explicitly specify the difference between manually graded and manually approved.
+Post implementation, a problem was encountered with how QuickFeed treats manually graded assignment.
+
+To QuickFeed, a manually graded assignment is any assignment whose reviewers field is higher than zero.
+When handling push events for such an assignment, no automated tests are run.
+No automated tests, means no test scores, and also no assignment total score.
+
+In our implementation we use scores for two purposes.
+One is to automatically publish feedback on the pull request in question, while the other is to determine when to assign reviewers to a pull request.
+If an assignment generates no scores, these pull requests would therefore be somewhat useless.
+It seems then that any assignment taking advantage of the features developed in this project cannot be manually graded.
+
+\section{Possible Improvements}
+
+Certain parts of the implementation has the potential to be improved.
+These improvements primarily revolve around already implemented code, and are relatively minor in scale.
+They are therefore discussed here, and any larger scale project is instead proposed in Chapter \ref{ch:future-work}.
+
+\subsection{GitHub App}
+\label{section:github-app}
+
+When discussing how to create issues and pull requests in sections \ref{sec:issue-creation} and \ref{sec:creating-pull-requests} respectively, we explored the need for QuickFeed to be able to identify as "itself".
+Implementing QuickFeed as a GitHub App would accomplish this, as a GitHub App acts on its own behalf when interacting with the GitHub API \cite{apps}.
+
+Running concurrently with this project, was another that converted QuickFeed into a GitHub App.
+For this implementation to be fully optimal, it should take advantage of this fact.
+For instance, creating issues should be done as QuickFeed, and not as students.
+Similarly, while creating pull request feedback comments as students is not that problematic, it would be best if they too were created as QuickFeed.
+
+QuickFeed being a GitHub App, also opens the door for pull requests being created automatically, as discussed in Section \ref{sec:creating-pull-requests}.
+Any implementation would still have to solve the problem of deciding the owner of a given pull request.
+To clarify, even if pull requests are created anonymously, QuickFeed still needs to know which student is actually working on it.
+Otherwise, we have no way of knowing from which pool of group members we should assign reviewers, as explained in Section \ref{sec:assigning-reviewers}.
+
+\subsection{Task Naming Format}
+
+A problem with the current implementation, is the fact that there are two types of task names.
+
+As discussed in Section \ref{sec:tasks-and-issues-data-structures}, the task data structure has a field name.
+It is set upon its creation, and is a combination of the assignment it is for, and the name of the markdown file that describes it.
+For example, a task can have the name assignment1/hello\_world.
+When complementing the score package to also support tasks, we instead use a local task name, i.e., only hello\_world.
+
+Originally, including the assignment name was necessary to associate tasks with each other when synchronizing them.
+Since then, the implementation has changed, and including the assignment name is no longer needed.
+A recommendation is therefore to make the local task name standard, thereby avoiding any unwanted confusion.
+
+\subsection{Linking Issues}
+
+When students create pull requests, a requirement is that they also link the relevant issue, by inserting a reference to them in the pull request body.
+The implementation for this has two problems.
+First of, the function that parses the issue from the pull request body, described in Code \ref{code:getLinkedIssue}, is limited in its capabilities, and demands a certain format.
+Secondly, if students were to fail, when linking pull requests to issues, they are not immediately made aware.
+
+To link an issue to a pull request, GitHub supports using a keyword such as "Fixes" or "Closes", followed by the character sequence "\#<issue number>".
+As an example, linking issue \#30 to a new pull request, can be done by inserting "Fixes \#30" in the pull request body.
+The function that parses the issue number from this sequence is limited to only handling simple cases, as it simply splits the pull request body.
+A better solution would probably be to use a regular expression search.
+
+To tackle the second problem, a solution could be to insert a comment or something similar in the faulty pull request, stating that an associated issue could not be found.
+Another approach could be to support linking issues after the pull request has already been created.
+Thereby removing the need for students to create a completely new pull request.
+
+\subsection{TITLE}
+
+% TODO: Should discuss how it would be easy to use all features except student code review on all student repositories.
+% Should maybe be in future work.
