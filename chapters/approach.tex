@@ -3,14 +3,27 @@
 \chapter{Approach}
 \label{ch:approach}
 
-Before we can start implementing anything, there are a few lingering design choices we have to make.
-In this chapter we discuss and analyse these, and try to give a rationale for why we made the choices that we did.
-% TODO: Hein recommends a recap of the goals of the project somewhere here
+The general approach taken to fulfill the project's goals, can be summarized as follows.
+
+To subdivide assignments into tasks, teachers will create and push markdown files to \textit{tests}.
+Each task has a title and body, which is described by the contents of one of these files.
+For every task a teacher creates, QuickFeed creates a GitHub issue on all student repositories in a course to represent them.
+These issues have the same title and body as the task they are based on.
+This way, issues are used as a representation of tasks that is accessible to students. % TODO: Check grammar here
+
+To solve a task, students will create a pull request for the issue that represents that task.
+When students push code to pull requests, QuickFeed will run tests on it, similarly to the way it currently tests entire assignments, and then publish the results to the relevant pull request.
+Furthermore, when enough tests pass, we assign one teacher and co-student to review the pull request.
+Only when the teacher approves the pull request, can it be merged.
+
+Before we can implementing anything, there are a few lingering design decisions regarding this approach.
+For instance, how do we publish automatic feedback to a pull request?
+In this chapter we discuss and analyse these design decisions, and try to give a rationale for the decisions that were made.
 
 \section{Student Repository Access}
 
 Since students do not have access to other students' repositories, they have no easy way of accessing their code.
-This becomes a necessity when want to do co-student code review, as they must somehow be given access to the relevant pull request.
+This becomes a necessity when doing co-student code review, as they must somehow be given access to the relevant pull request.
 In this section we discuss possible solutions to overcome this problem.
 
 \subsection{Possible Solutions}

@@ -23,31 +23,23 @@ In the current iteration of QuickFeed, students only receive automated feedback 
 Here, they can see what parts of their code is failing, and also whether they have successfully passed the assignment.
 The motivation behind this thesis is to further expand on how students receive feedback when working on an assignment.
 
-Using GitHub pull requests we can facilitate manual feedback directly on student code by using its review features.
-Pull requests also have the potential to support automatic feedback, e.g. by another GitHub feature called workflows.
+Using GitHub pull requests we can facilitate manual feedback directly on student code, by using its review features.
+Pull requests also have the potential to support automatic feedback, e.g., by another GitHub feature called workflows.
 
 \section{Objectives}
 
-This project has the two following objectives.
+This project has the following fundamental objectives.
 
-To provide automated and manual feedback on student code, QuickFeed will support using GitHub pull requests.
-Facilitating manual feedback means QuickFeed will decide when to assign reviewers to a pull request and who to assign.
-When a pull request is approved, QuickFeed will also determine if this approval was legitimate.
-To support automated feedback via pull requests, we want to use GitHub workflows, and have them work in conjunction with QuickFeed.
+First of, we want to give teachers the option of subdividing assignments into individual tasks.
+A single assignment can for example have three tasks, each describing specific problems students need to solve.
+When a student wishes to solve a given assignment task, they create a pull request, in which they implement all code relevant for that task.
 
-To further accommodate pull requests, we want QuickFeed to support task markdown files within an assignment.
-These will function as a way for teachers to subdivide their assignment into smaller parts.
-For each task, a GitHub issue will be created on every student repository by QuickFeed.
-These issues are the ones students will base their pull request on.
+Furthermore, in this project we want to use these pull requests to provide feedback on the code students create.
+Specifically, when the student completes a task, the pull request representing it is reviewed by a teacher and co-student.
+They can thereby request changes and recommend improvements where deemed fitting.
 
-\section{Approach and Contributions}
-
-\begin{itemize}
-\item Give a brief summary of your overall approach.
-\item Summarize the specific contributions that you made in this thesis (implementation, empirical results, analysis, etc.).
-\item It might be presented as a bullet list.
-\end{itemize}
-
+As students push code to their pull requests, we also want QuickFeed to support some sort of automatic feedback on that code.
+This feedback should give the students a general indication on how well they are doing.
 
 \section{Outline}
 
