@@ -8,7 +8,7 @@ Since its inception in 2015 \cite{autograder}, both teachers and students have c
 
 QuickFeed aims to ease the process of submitting student assignments for both students and the teaching staff.
 Though not exclusively, the project is primarily developed with the intent of handling code based assignments.
-QuickFeed will run predetermined tests on submitted code, and will use their results to provide feedback for students via its web interface.
+QuickFeed will run predetermined tests on submitted code, and uses their results to provide students with feedback via its web interface.
 Using QuickFeed, assignments can be both scored and graded without the teaching staff ever having to intervene.
 
 To accommodate these features, QuickFeed uses GitHub to, amongst other things, manage student code.
@@ -16,7 +16,7 @@ GitHub is therefore one of the primary sites students interact with, when workin
 Because of this, there is a desire to further integrate QuickFeed with GitHub.
 Specifically, we aim to use GitHub's pull request and issue features to give students another avenue for manual and automatic feedback.
 
-\section{Motivation and Background}
+\section{Motivation}
 \label{sec:motivation}
 
 In the current iteration of QuickFeed, students only receive automated feedback on their code through QuickFeed's custom web interface.
@@ -30,16 +30,13 @@ Pull requests also have the potential to support automatic feedback, e.g., by an
 
 This project has the following fundamental objectives.
 
-First of, we want to give teachers the option of subdividing assignments into individual tasks.
-A single assignment can for example have three tasks, each describing specific problems students need to solve.
-When a student wishes to solve a given assignment task, they create a pull request, in which they implement all code relevant for that task.
+First of, we want to give teachers the option of subdividing assignments into individual tasks, each describing specific problems students need to solve.
+When a student wants to solve a given assignment task, they create a pull request, in which they implement all code relevant for that task.
 
-Furthermore, in this project we want to use these pull requests to provide feedback on the code students create.
-Specifically, when the student completes a task, the pull request representing it is reviewed by a teacher and co-student.
-They can thereby request changes and recommend improvements where deemed fitting.
+Furthermore, in this project, we want QuickFeed to assign reviewers to these pull requests when appropriate.
+These reviewers can request changes and recommend improvements where they deem necessary, thereby providing students with a new way to receive feedback.
 
-As students push code to their pull requests, we also want QuickFeed to support some sort of automatic feedback on that code.
-This feedback should give the students a general indication on how well they are doing.
+As students push code to their pull requests, we also want QuickFeed to publish some sort of automatic feedback, giving the students a general indication on how well they are doing, directly on the pull requests themselves.
 
 \section{Outline}
 
