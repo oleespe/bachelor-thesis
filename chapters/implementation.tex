@@ -154,6 +154,7 @@ The name field is used to associate TRtasks with DBtasks.
 If a task markdown file with the name \textit{task-hello\_world.md} is found within \textit{assignment1}, then its corresponding name will be assignment1/hello\_world.
 This name is set when the task itself is parsed, as described in Section \ref{sec:parsing_tasks}.
 
+\pagebreak
 \lstinputlisting[caption={Issue message}, label={code:Issue}, firstline=195, lastline=200]{code/ag.proto}
 
 When compiled, the generated data structure is used to represent issues internally in QuickFeed.
@@ -526,6 +527,7 @@ func CreateFeedbackComment(results *score.Results, task *pb.Task, assignment *pb
 \end{lstlisting}
 
 To illustrate, we can supply CreateFeedbackComment with the results, task and assignment described in Code \ref{code:sample-CreateFeedbackComment}.
+\pagebreak
 \begin{lstlisting}[caption={Example of a CreateFeedbackComment run}, label={code:sample-CreateFeedbackComment}, language=Golang]
 results := &score.Results{
 	Scores: []*score.Score{
