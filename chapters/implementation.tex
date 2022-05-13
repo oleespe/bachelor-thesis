@@ -6,7 +6,7 @@
 \section{Introduction}
 
 In this chapter, we explore how the project was implemented.
-Describing all additions that were made to QuickFeed, some of the challenges faced with certain additions, and how they all tie together.
+Describing all additions that were made to QuickFeed, and some of the challenges faced.
 
 \subsection{Feature Overview}
 
@@ -14,37 +14,37 @@ To fully grasp what to implement, this section describes all the features we wan
 
 \textbf{Tasks and issues}
 
-First of all we want QuickFeed to support teachers creating task markdown files within individual assignments.
-As these are created and pushed to \textit{tests}, QuickFeed should create GitHub issues based on their contents in all group repositories.
+First of all, we want QuickFeed to support teachers creating task markdown files within individual assignments in \textit{tests}.
+As these are created and pushed, QuickFeed should create GitHub issues, based on their contents, in all group repositories.
 Furthermore, when these task files are updated or deleted, their changes should be reflected in their respective issues.
 
 \begin{figure}[ht]
     \centering
     \includegraphics[scale=0.8]{photos/tests-repository-structure-tasks.PNG}
-    \caption{Example of a tests repository with tasks}
+    \caption{Example of a tests repository with task markdown files}
     \label{fig:tests-repository-structure-tasks}
 \end{figure}
 
 \textbf{Pull Requests}
 
-For every issue, group members are expected to solve them by creating a new branch and pull request.
-QuickFeed should then support...
+For every task, group members are expected to solve them by creating a new pull request.
+QuickFeed should then support:
 \begin{itemize}
-    \item Returning automatic feedback in the form of a comment every time a student pushes to a pull request.
-    \item Automatically assigning appropriate reviewers when students get a passing score on their code.
-    Specifically, one teacher and one other group member.
+    \item Returning automatic feedback, in the form of a comment, every time a student pushes to a pull request.
+    \item Automatically assigning reviewers to a pull request when students get a passing score on the task relevant for that pull request.
+    Specifically, one teacher and one other group member should be assigned.
 \end{itemize}
 
 \section{Existing implementation}
 
-An implementation has already been attempted for this project. % TODO: Ref here, and mention both names.
-Before we can begin with a new one, we first have to decide which parts of it we want to use, and which to discard.
+An implementation has already been attempted for this project.
+Before starting on a new one, we first have to decide which parts of it we want to use, and which to discard.
 These parts are summarized in this section.
 
 \subsection{SCM Expansion}
 \label{sec:scm_expansion}
 
-The SCM package has been expanded to support the following functions:
+The SCM package, described in Section \ref{sec:scm}, has been expanded to support the following functions:
 
 \begin{itemize}
     \item CreateIssue   - creates an issue on a repository.
@@ -53,16 +53,15 @@ The SCM package has been expanded to support the following functions:
     \item GetIssues - retrieves all issues from a repository.
 \end{itemize}
 
-CreateIssue and EditIssue would prove useful, and are used with only minor adjustments to them.
-The two other functions, centered around retrieving issues were not needed, but still used in earlier parts of the project when testing.
+CreateIssue and EditIssue proved useful, and are used with only minor adjustments to them.
+The two other functions, were not needed, but still used in earlier parts of the project when testing.
 
 \subsection{Logic}
 
 A lot of existing code was intended to handle the logic around managing tasks. 
-In short, this code was meant to do determine when to create, edit or delete issues on GitHub.
-The code did however not accomplish this in a functional manner.
-This lead to the dilemma of whether to continue developing this faulty code, or simply start anew.
-In the end, we decided that any attempt to fix the existing logic code would be more time consuming and confusing than simply starting fresh.
+In short, this code was meant to do determine when to create, edit, or delete issues on GitHub, based on task markdown files in \textit{tests}.
+The code did however not accomplish this in a functional manner, which lead to the dilemma of whether to continue developing this faulty code, or simply start anew.
+In the end, we decided that any attempt to fix things would be more time consuming and confusing than simply starting fresh.
 
 \subsection{Finding and Parsing Tasks}
 \label{sec:parsing_tasks}
@@ -92,34 +91,42 @@ Going forward, the general approach to parsing and creating tasks is left as it 
 
 Having looked at what existing code we decided to keep, we continue by exploring the part of the project that was implemented first; how to manage tasks and issues.
 
-As a general clarification, tasks are defined by the contents of the \textit{task-*.md} markdown files in \textit{tests}.
+As a reminder, a task is defined by the contents of a single \textit{task-*.md} markdown file in \textit{tests}.
+When referring to teachers creating, updating or deleting tasks, we mean how they create, update and delete these markdown files.
+
 An issue on the other hand, is defined as any GitHub issue based on these tasks.
-As an example, we can have a course with an assignment containing three tasks.
+For instance, we can have a course with an assignment containing three tasks.
 In this course, we also have five group repositories.
 These three tasks should then be represented on all five group repositories as GitHub issues, giving us a total of 15 issues.
 Tasks therefore function as a "benchmark", used to create issues.
-In this thesis students can be referred to as solving both tasks and issues, which in essence means the same thing.
+% In this thesis students can be referred to as solving both tasks and issues, which in essence means the same thing.
 
 \subsection{Approach}
-% TODO: Should read through the managing tasks and issue part, and find the best way to explain how we associate DBtasks and TRtasks,
-% and why we need to do so.
-% Also the difference between issues and tasks.
-% Should generally just review how we explain everything.
 
 To support teachers creating, updating and deleting tasks, QuickFeed must have the capacity to handle these events.
 For example, if a task is created, QuickFeed should create an issue based on it in every group repository within the relevant course.
 Similarly, as tasks are updated or deleted, these changes must also be reflected in every issue created from them.
 In short, we need to keep every issue in sync with its associated task.
 
-To accomplish this, we keep a record every task and issue in QuickFeed's database.
-The task database records are used to store a reference to what a given task looked like on the last push to \textit{tests}.
-Doing so, we can at any subsequent push check if a task is in a different state than it was before.
-Furthermore, by storing a reference to every issue created, we can know which issues need to be changed if necessary.
+To accomplish this, we keep a record of every task and issue in QuickFeed's database.
+The task database records are used to store a reference to what a given task looked like on the latest push to \textit{tests}.
+Doing so, we can at any subsequent push check if a task is in a different state than it was before, e.g., if a teacher updated its title.
+Furthermore, by storing a reference to every issue created, we can know which issues need to be altered.
+If, for example, a teacher changes the body of a task, we must update not just the existing data record for that task, but also all issues that were created from it.
 
 The process of synchronizing both tasks and issues is handled by the new function handleTasks, which is run as part of UpdateFromTestsRepo.
+UpdateFromTestsRepo in turn, is run every time someone pushes to \textit{tests}.
 The function handleTasks and the synchronization process in general, are further described in the following sections. 
 
-To avoid confusion, we define the following distinctions for assignments and tasks.
+\subsection{Assignment and Task Data Objects}
+
+When dealing with tasks and assignments, we have to differentiate how we create data objects to represent them.
+For instance, QuickFeed currently creates assignment data objects based on the contents of \textit{tests}, as described in Section \ref{sec:parsing_tasks}.
+QuickFeed also stores representations of these assignments in the database.
+This means that there are two types of assignment data objects we can refer to; those created from the contents of \textit{tests}, and those retrieved from the database.
+
+Similarly, in this project, we have to deal with the prospect of task data objects created from the contents of markdown files in \textit{tests}, and existing ones in the database.
+To know which type is being referred to, we define the following abbreviations.
 \begin{itemize}
     \item TRtask - tests repository task. Meaning any task represented by a \textit{task-*.md} markdown file in \textit{tests}.
     \item DBtask - database task. Meaning any task that refers to an existing task data record stored in the database.
@@ -132,39 +139,32 @@ To avoid confusion, we define the following distinctions for assignments and tas
 \label{sec:tasks-and-issues-data-structures}
 
 To manage tasks and issues, two new messages are defined in the \textit{ag.proto} file: \textbf{Task} and \textbf{Issue}.
-These are used to generate the data structures that are stored in the database.
-
-\textbf{Task} is defined in Code \ref{code:Task}.
 
 \lstinputlisting[caption={Task message}, label={code:Task}, firstline=185, lastline=193]{code/ag.proto}
 
 The title and body fields are defined by the contents of a task markdown file.
-They are used to represent the title and body of any issue that is created from a given task.
+These fields define the title and body of all issues that are created from this task.
 
-For an assignment, order is a number used to determine the order in which it is represented in a course.
+For an assignment, order is defined as a number, used to determine the order in which it is represented in a course.
 It is set by a teacher in the \textit{assignment.yml} file, as described in Section \ref{sec:quickfeed-repository-structure}.
-When creating a new task, keeping track of the corresponding assignment order is useful.
-It allows us to associate tasks and assignments without explicitly knowing the assignment ID, so long as our scope is limited to just a single course.
-A feature that will prove necessary.
+By allowing QuickFeed to associate TRassignments with DBassignments, it functions as a local assignment reference within a single course.
+Similarly, when creating TRtasks we store a reference to the TRassignment it was found in, by using the TRassignment's order.
+If our scope is limited to a single course, this allows us to know which DBassignment a given TRtask is supposed to be a part of.
 
 The name field is used to associate TRtasks with DBtasks.
-If a task file with the name \textit{task-hello\_world.md} is found within \textit{assignment1}, then its corresponding name will be assignment1/hello\_world.
+If a task markdown file with the name \textit{task-hello\_world.md} is found within \textit{assignment1}, then its corresponding name will be assignment1/hello\_world.
 This name is set when the task itself is parsed, as described in Section \ref{sec:parsing_tasks}.
-
-Every TRtask and DBtask is represented by the data structure generated by this message.
-
-\textbf{Issue} is defined in Code \ref{code:Issue}.
 
 \lstinputlisting[caption={Issue message}, label={code:Issue}, firstline=195, lastline=200]{code/ag.proto}
 
-When compiled, the generated data structure is used to represent issues in QuickFeed.
-The issueNumber and repositoryID fields let us hold a reference to every GitHub issue.
+When compiled, the generated data structure is used to represent issues internally in QuickFeed.
+The issueNumber field lets us reference any GitHub issue within a repository.
 
 \subsection{Synchronizing Tasks}
 
 As mentioned, we store references to tasks in the database.
-When teachers push new or updated TRtasks to \textit{tests}, QuickFeed must create and update the existing DBtask records respectively.
-Similarly, when a TRtask has been removed, its respective DBtask must also be deleted from the database.
+When teachers push new or updated tasks to \textit{tests}, QuickFeed must create or update the existing DBtask records representing them.
+Similarly, when a task has been deleted, its associated DBtask must also be deleted from the database.
 
 These events are handled by the database method SynchronizeAssignmentTasks, which is run at the start of handleTasks.
 SynchronizeAssignmentTasks is supplied with every TRassignment created by UpdateFromTestsRepo, each with their list of TRtasks.
@@ -176,10 +176,10 @@ This mapping allows us to loop through all DBassignment records in a course, and
 
 The process of synchronizing tasks is explained as follows.
 For every DBtask in a DBassignment, check if it has the same name as any of the TRtasks belonging to the TRassignment with the same order.
-If no match can be found for the DBtask, it must mean that the TRtask has been removed, and the task itself no longer exists.
-The DBtask can therefore safely be deleted.
+If no match can be found for the DBtask, it must mean that the TRtask has been removed, and the task itself no longer exists, which means that
+the DBtask can be safely deleted.
 However, if there is a match for the DBtask, we check if its body or title differs from its TRtask counterpart.
-If true, it means that the task has been updated, and if not, it remains unchanged.
+If true, we conclude that the task has been updated, and if not, it must be unchanged.
 Furthermore, any TRtask that is not represented by a DBtask must represent a new task, and we therefore create a DBtask to represent it.
 
 The main synchronization logic performed by SynchronizeAssignmentTasks is listed in Code \ref{code:SynchronizeAssignmentTasks}.
@@ -224,11 +224,11 @@ for _, DBassignment := range DBassignments {
 }
 \end{lstlisting}
 
-SynchronizeAssignmentTasks also returns the DBtasks it has created or updated, which which are used when synchronizing issues.
+SynchronizeAssignmentTasks also returns the DBtasks it has created or updated, which are used when synchronizing issues.
 
 \subsection{Synchronizing Issues}
 
-When synchronizing issues we must make sure to synchronize not only the issue database records, but also the GitHub issues themselves.
+Having synchronized tasks, we must also create, update and delete all GitHub issues where necessary, as well as their relevant database records.
 
 As mentioned, SynchronizeAssignmentTasks already determines the tasks that have been created, updated or deleted.
 In fact, when it detects that a task has been deleted, it deletes not only the task but all associated issue records, as seen on Line 14 in Code \ref{code:SynchronizeAssignmentTasks}.
@@ -258,7 +258,7 @@ return db.CreateIssues(createdIssues)
 
 In short, we use the created and updated DBtasks returned by SynchronizeAssignmentTasks, as arguments in createIssues and updateIssues respectively.
 These functions use the SCM functions described in Section \ref{sec:scm_expansion}.
-Then, by looping through every course group repository GitHub issues are created and updated accordingly.
+Then, by looping through every course group repository, GitHub issues are created and updated accordingly.
 The function createIssues also returns a list of all the issues it created.
 These are used at the end of the process to create issue database records.
 
@@ -305,7 +305,7 @@ The stage field is used to keep track of the "stage" a pull request is in.
 When a pull request is first created, it is in the draft stage.
 Once enough of its tests are passing, it moves to the review stage, meaning that it is now ready for review.
 The final stage, approved, is reached when a teacher actually approves the pull request.
-How these stages are traversed, and how we know when to go from one to another is described in the following sections.
+How these stages are traversed, and how we know when to go from one to another, is described in the following sections.
 
 \subsection{Creating Pull Requests}
 
@@ -317,9 +317,9 @@ In Section \ref{sec:creating-pull-requests} we decided to have students manually
 To accommodate this feature, QuickFeed must react to the pull requests being opened.
 Expanding QuickFeed to also handle pull request related webhooks, allows us to do just that.
 
-Specifically, when a pull request is opened the handlePullRequestOpened function is run.
-It will check if a pull request is legitimate, i.e., it was created on a group repository and linked to the correct issue.
-If successful, the function creates a new record to represent it, by using the data in the event payload, and then stores it in the database.
+Specifically, when a pull request is opened, the handlePullRequestOpened function is run.
+It will check if a pull request is legitimate, i.e., it was created on a group repository and is linked to a valid issue.
+If successful, the function creates a new data object to represent the pull request, by using the data in the event payload, and then stores it in the database.
 
 Associating a pull request to an issue requires the students themselves explicitly doing so.
 GitHub allows you to link issues to pull requests on their creation, by inserting a reference to them in the pull request body.
@@ -342,13 +342,13 @@ func getLinkedIssue(body string) (uint64, error) {
 
 This solution somewhat limits the possible contents of a pull request body.
 For example, students must make sure only to use one "\#" character for the function to succeed.
-This is further discussed in section .% TODO: Ref to relevant discussion section.
+Possible ways to improve this approach is further discussed in section \ref{sec:linking-issues}.
 
 \subsection{Closing Pull Requests}
 
 When students close and merge pull requests---ideally when they are supposed to---QuickFeed must also act accordingly.
 Again, we use webhooks to listen to pull request closed events, and single out those that are relevant to QuickFeed.
-Relevant in this context, is any event for a pull request that already exist in QuickFeed's database, i.e., they were created as part of the process described in the above section.
+Relevant in this context, is any event for a pull request that already exist in QuickFeed's database, i.e., they were created as part of the process described in the previous section.
 Events for pull requests that are closed, but not merged, can also be filtered out, as these constitute an incorrect close.
 If students do happen to close pull requests like this, a working state can be restored by the student, simply by reopening it.
 QuickFeed doing nothing in these cases is therefore the simplest solution.
@@ -362,7 +362,6 @@ This way, a student doing an incorrect merge can simply reopen the issue that wa
 Thereby restoring a working state with little QuickFeed involvement.
 
 \section{Scoring Tasks}
-% TODO: Also need to talk about how we must now check out a local git branch.
 
 To allow for both automatic and manual feedback, we need a way to score tasks.
 Delivering automatic feedback requires us to do so solely on the tests associated with any given task.
@@ -372,7 +371,7 @@ Having it do so on a per task basis therefore seems like a necessity to fulfill 
 
 QuickFeed's ci package is fundamentally designed to test assignments, therefore rewriting it to support tasks would be challenging.
 Any solution might also not be backwards compatible.
-To implement our features though, QuickFeed does not need to test task related code, only score it.
+To implement our features though, QuickFeed does not need to explicitly test task related code, only score it.
 As such, we can instead complement the score package to support this functionality.
 
 Doing so turned out to be pretty straight forward.
@@ -381,18 +380,29 @@ Doing so, gives us a direct reference to the task a given score is associated wi
 Furthermore, to support teachers adding task specific tests, two new variants of the existing Add and AddSub methods are created.
 These allow teachers to specify the task name a test should be a part of.
 Finally, to generate a task specific total score, QuickFeed simply sums over the scores that have that task's name.
-With these changes implemented, we can generate a score from 0 - 100 for specific tasks, just as is already possible for entire assignments.
 
 It should be noted that when referring to a task name in the context of the score package, we mean the local task name.
 The local task name differs from the regular one by omitting the assignment name.
-As an example, a task with the name \textit{assignment1/hello\_world} will have the local name \textit{hello\_world}.
+As an example, a task with the name assignment1/hello\_world will have the local name hello\_world.
 This was primarily done to make the process of associating tests and tasks more intuitive for the teachers doing so.
+
+Given that students will be working on non-default local branches when solving tasks, we also altered the ci package to support checking out these branches.
+As mentioned in Section \ref{sec:testing-assignments}, QuickFeed supports supplying the run script with arguments.
+By providing the script with the branch name, we can thereby switch to the correct local branch before running tests.
+\begin{lstlisting}[caption={Checking out non-default local branch}, numbers=none]
+# Checkout branch if it is not main
+if [ {{ .BranchName }} != "main" ]; then
+  git checkout {{ .BranchName }}
+fi
+\end{lstlisting}
+
+With these changes implemented, we can generate a score from 0 - 100 for specific tasks, just as is already possible for entire assignments.
 
 \section{Manual Feedback}
 
 Having implemented QuickFeed support for scoring tasks in the previous section, these features can now be used to facilitate manual review.
-In short, our approach is to assign one student and teacher reviewer to a pull request once a passing score is reached.
-This passing score limit is the same as the assignment score limit.
+In short, our approach is to assign one student and teacher reviewer to a pull request when a passing score is achieved.
+This passing score limit is the same as a given task's assignment score limit.
 
 Checking whether a task is passed or not must be done every time a student pushes to a group repository.
 QuickFeed already has a function that handles these push events, and we can therefore manage all review assignment related logic there.
@@ -482,7 +492,7 @@ So, as long as the review is from a teacher, the pull request stage is updated t
 Using QuickFeed's new capacity to score tasks, we implemented support for manual feedback on pull requests.
 This new capacity also allows for automatic feedback on the same pull requests.
 
-The approach is to use a single comment on a student's pull request to automatically publish test results from their latest commit.
+Our approach is to use a single comment on a student's pull request to automatically publish test results from their latest commit.
 This comment must be updated every time the student pushes to their pull request, and as such we can therefore use the function handlePullRequestPush.
 A function that is used to manage all non-default branch pushes to group repositories, as described in Section \ref{sec:assigning-reviewers}.
 
@@ -534,8 +544,7 @@ CreateFeedbackComment(results, &pb.Task{Name: "lab1/1"},
 \end{lstlisting}
 
 The resulting comment body in Figure \ref{fig:feedback-comment} is then generated.
-Note that the tests with name \textit{Test6} and \textit{Test7} are omitted from the table, because they are not associated with the task supplied to CreateFeedbackComment.
-I.e., they do not have the same name.
+Note that the tests with name Test6 and Test7 are omitted from the table, because they are not associated with the task supplied to CreateFeedbackComment.
 
 \begin{figure}[ht]
     \centering

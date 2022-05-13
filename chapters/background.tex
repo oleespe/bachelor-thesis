@@ -116,7 +116,7 @@ The \textit{assignment.yml} file is used by teachers to specify assignment speci
 For instance, it can contain information about an assignment's deadline, and whether it is manually approved.
 
 \begin{lstlisting}[caption={Example contents of an \textit{assignment.yml} file}, numbers=none]
-assignmentid: 1
+assignmentorder: 1
 name: "lab1"
 scriptfile: "run.sh"
 deadline: "15-05-2022T16:00"
@@ -198,6 +198,7 @@ So, if a student gets a score of 3 out of 6 on this test, it would give a score 
 Adding up all scores like this for an entire assignment, gives us the assignment total score.
 
 \subsection{Testing Assignments}
+\label{sec:testing-assignments}
 
 Having explored how QuickFeed scores student code, this section will further explore parts of the assignment submission process that are important.
 
@@ -209,7 +210,7 @@ Running the tests is done by QuickFeed's ci package.
 To set up a test environment, it uses the Dockerfile found in \textit{tests} to create a docker container.
 It then continues by running the assignment's script file, as mentioned in Section \ref{sec:quickfeed-repository-structure}.
 These script files can be assignment specific, but generally they use git clone to merge the students code with the assignment tests; followed up by a command to run all tests.
-The ci package also supports supplying the script with arguments, e.g. to clone the correct student repository.
+The ci package also supports supplying the script with arguments, e.g., to clone the correct student repository.
 
 When this process is finished, QuickFeed extracts the test run's results and uses them to, amongst other things, determine whether the student got a passing score.
 
@@ -235,6 +236,7 @@ This webhook is only triggered by push events, which are then handled by QuickFe
 \end{itemize}
 
 \subsection{Source Control Management API}
+\label{sec:scm}
 
 The second way QuickFeed communicates with GitHub is through a custom API.
 
