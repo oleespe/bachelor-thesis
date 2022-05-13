@@ -99,7 +99,6 @@ For instance, we can have a course with an assignment containing three tasks.
 In this course, we also have five group repositories.
 These three tasks should then be represented on all five group repositories as GitHub issues, giving us a total of 15 issues.
 Tasks therefore function as a "benchmark", used to create issues.
-% In this thesis students can be referred to as solving both tasks and issues, which in essence means the same thing.
 
 \subsection{Approach}
 
@@ -118,7 +117,7 @@ The process of synchronizing both tasks and issues is handled by the new functio
 UpdateFromTestsRepo in turn, is run every time someone pushes to \textit{tests}.
 The function handleTasks and the synchronization process in general, are further described in the following sections. 
 
-\subsection{Assignment and Task Data Objects}
+\subsection{Differentiating Data Objects}
 
 When dealing with tasks and assignments, we have to differentiate how we create data objects to represent them.
 For instance, QuickFeed currently creates assignment data objects based on the contents of \textit{tests}, as described in Section \ref{sec:parsing_tasks}.

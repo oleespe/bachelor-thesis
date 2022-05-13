@@ -3,19 +3,30 @@
 \chapter{Approach}
 \label{ch:approach}
 
-The general approach taken to fulfill the project's goals, can be summarized as follows.
+The general approach taken to fulfill the project's goals can be summarized as follows.
 
 To subdivide assignments into tasks, teachers will create and push markdown files to \textit{tests}.
 Each task has a title and body, which is described by the contents of one of these files.
 For every task a teacher creates, QuickFeed creates a GitHub issue on all student repositories in a course to represent them.
 These issues have the same title and body as the task they are based on.
-This way, issues are used as a representation of tasks, which is accessible to students.
+This way, issues are used as a representation of tasks accessible to students.
 
 To solve a task, students will create a pull request for the issue that represents that task.
 When students push code to pull requests, QuickFeed will run tests on it, similarly to the way it currently tests entire assignments.
 Based on the results from a given test run, QuickFeed publishes feedback on the relevant pull request.
 Furthermore, when enough tests pass, we assign one teacher and co-student to review the pull request.
 Only when the teacher approves the pull request, can it be merged.
+
+This general approach can be visualized in Figure \ref{fig:approach}.
+It shows a single task that serves as the basis for individual issues on three different student repositories.
+For each of these issues, a pull request is created to solve the task the issue is based on.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[scale=0.5]{photos/approach.png}
+    \caption{General approach}
+    \label{fig:approach}
+\end{figure}
 
 Before we can implementing anything, there are a few lingering design decisions regarding this approach.
 For instance, how do we publish automatic feedback to a pull request?
